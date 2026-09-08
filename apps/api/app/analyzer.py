@@ -20,7 +20,7 @@ def _files(root: Path, limit: int):
         if not path.is_file() or any(part in IGNORED for part in path.parts):
             continue
         try:
-            if path.stat().st_size > 1_000_000:
+            if path.is_symlink() or path.stat().st_size > 1_000_000:
                 continue
         except OSError:
             continue
@@ -43,6 +43,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     for path in _files(root, max_files):
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
+            size_bytes = path.stat().st_size
         except OSError:
             continue
         lines = text.count("\n") + (1 if text else 0)
@@ -58,7 +59,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             docs += 1
         if lines > 800:
             large_files.append(rel)
-        signals.append(FileSignal(path=rel, kind=kind, size_bytes=path.stat().st_size, lines=lines))
+        signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
     risks: list[Risk] = []
     file_count = len(signals)
