@@ -26,7 +26,10 @@ def _is_sensitive(path: Path) -> bool:
 
 def _files(root: Path, limit: int):
     count = 0
-    for path in root.rglob("*"):
+    # Sort paths so scan limits and returned signals are deterministic across
+    # filesystems. This also makes repeated analyses easier to compare.
+    paths = sorted(root.rglob("*"), key=lambda path: str(path.relative_to(root)))
+    for path in paths:
         if count >= limit:
             break
         if not path.is_file() or any(part in IGNORED for part in path.parts):
