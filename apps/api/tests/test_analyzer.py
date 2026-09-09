@@ -80,6 +80,14 @@ def test_analyzer_skips_binary_files(tmp_path: Path):
     assert all(signal.path != "image.bin" for signal in result.signals)
 
 
+def test_binary_files_do_not_consume_scan_limit(tmp_path: Path):
+    (tmp_path / "00-image.bin").write_bytes(b"\x00binary")
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path), max_files=1)
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_analyzer_skips_sensitive_files(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
     for name in (".env", ".env.local", "credentials.json", "server.pem"):
