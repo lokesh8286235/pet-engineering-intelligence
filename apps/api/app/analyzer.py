@@ -5,6 +5,7 @@ from pathlib import Path
 from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", "node_modules", "dist", "build", ".venv", "venv", "__pycache__"}
+SENSITIVE_FILENAMES = {".env", ".env.local", ".env.production", ".env.development", "credentials.json"}
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
     ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
@@ -18,6 +19,8 @@ def _files(root: Path, limit: int):
         if count >= limit:
             break
         if not path.is_file() or any(part in IGNORED for part in path.parts):
+            continue
+        if path.name in SENSITIVE_FILENAMES:
             continue
         try:
             if path.is_symlink() or path.stat().st_size > 1_000_000:
