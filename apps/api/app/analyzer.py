@@ -66,7 +66,9 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         # Treat NUL-containing files as binary so they don't pollute code metrics.
         if "\x00" in text:
             continue
-        lines = text.count("\n") + (1 if text else 0)
+        # splitlines() handles LF, CRLF, and legacy CR line endings without
+        # counting a trailing newline as an additional source line.
+        lines = len(text.splitlines())
         rel = str(path.relative_to(root))
         suffix = path.suffix.lower()
         kind = EXTENSIONS.get(suffix, "Other")
