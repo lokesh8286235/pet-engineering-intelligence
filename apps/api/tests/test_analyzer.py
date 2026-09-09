@@ -29,3 +29,11 @@ def test_analyzer_skips_symlinks(tmp_path: Path):
         return
     result = analyze_repository(str(tmp_path))
     assert all(signal.path != "linked.py" for signal in result.signals)
+
+
+def test_analyzer_skips_binary_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "image.bin").write_bytes(b"\x89PNG\r\n\x1a\n\x00binary")
+    result = analyze_repository(str(tmp_path))
+    assert result.files == 1
+    assert all(signal.path != "image.bin" for signal in result.signals)
