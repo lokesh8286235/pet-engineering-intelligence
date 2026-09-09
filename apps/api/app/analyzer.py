@@ -38,6 +38,14 @@ def _is_test_file(path: Path) -> bool:
     )
 
 
+def _looks_binary(path: Path) -> bool:
+    """Return True when a small sample contains a NUL byte."""
+    try:
+        return b"\x00" in path.read_bytes()[:8192]
+    except OSError:
+        return True
+
+
 def _files(root: Path, limit: int):
     count = 0
     # Sort paths so scan limits and returned signals are deterministic across
@@ -54,6 +62,8 @@ def _files(root: Path, limit: int):
             if path.is_symlink() or path.stat().st_size > 1_000_000:
                 continue
         except OSError:
+            continue
+        if _looks_binary(path):
             continue
         count += 1
         yield path
