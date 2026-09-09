@@ -38,6 +38,21 @@ def test_analyzer_flags_missing_tests(tmp_path: Path):
     assert any(r.category == "testing" and r.severity == "high" for r in result.risks)
 
 
+def test_analyzer_detects_conventional_test_files_without_substring_false_positives(tmp_path: Path):
+    (tmp_path / "contest.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "test_parser.py").write_text("def test_parser(): pass\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert not any(r.category == "testing" for r in result.risks)
+
+
+def test_analyzer_detects_nested_spec_files(tmp_path: Path):
+    spec_dir = tmp_path / "specs"
+    spec_dir.mkdir()
+    (spec_dir / "parser.py").write_text("def test_parser(): pass\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert not any(r.category == "testing" for r in result.risks)
+
+
 def test_analyzer_skips_symlinks(tmp_path: Path):
     target = tmp_path / "outside.py"
     target.write_text("secret = True\n", encoding="utf-8")
