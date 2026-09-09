@@ -24,6 +24,19 @@ def _is_sensitive(path: Path) -> bool:
     )
 
 
+def _is_test_file(path: Path) -> bool:
+    """Return True for conventional test/spec files without substring false positives."""
+    parts = [part.lower() for part in path.parts]
+    stem = path.stem.lower()
+    return (
+        any(part in {"test", "tests", "spec", "specs"} for part in parts)
+        or stem.startswith("test_")
+        or stem.endswith("_test")
+        or stem.startswith("spec_")
+        or stem.endswith("_spec")
+    )
+
+
 def _files(root: Path, limit: int):
     count = 0
     # Sort paths so scan limits and returned signals are deterministic across
@@ -77,8 +90,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         kind = EXTENSIONS.get(suffix, "Other")
         languages[kind] = languages.get(kind, 0) + 1
         total_lines += lines
-        lower = rel.lower()
-        if "test" in lower or "spec" in lower:
+        if _is_test_file(path.relative_to(root)):
             test_files += 1
         if suffix == ".md":
             docs += 1
