@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from app.analyzer import analyze_repository
 
 
@@ -41,8 +43,13 @@ def test_analyzer_skips_binary_files(tmp_path: Path):
 
 def test_analyzer_skips_sensitive_files(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-    (tmp_path / ".env").write_text("API_KEY=should-not-be-scanned\n", encoding="utf-8")
-    (tmp_path / "credentials.json").write_text("{\"token\": \"secret\"}\n", encoding="utf-8")
+    for name in (".env", ".env.local", "credentials.json", "server.pem"):
+        (tmp_path / name).write_text("SECRET=should-not-be-scanned\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
     assert result.files == 1
-    assert all(signal.path not in {".env", "credentials.json"} for signal in result.signals)
+    assert all(signal.path not in {".env", ".env.local", "credentials.json", "server.pem"} for signal in result.signals)
+
+
+def test_analyzer_rejects_non_positive_file_limits(tmp_path: Path):
+    with pytest.raises(ValueError, match="max_files must be greater than zero"):
+        analyze_repository(str(tmp_path), max_files=0)
