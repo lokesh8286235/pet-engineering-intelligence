@@ -46,6 +46,10 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             size_bytes = path.stat().st_size
         except OSError:
             continue
+        # UTF-8 decoding can silently turn arbitrary binary data into text.
+        # Treat NUL-containing files as binary so they don't pollute code metrics.
+        if "\x00" in text:
+            continue
         lines = text.count("\n") + (1 if text else 0)
         rel = str(path.relative_to(root))
         suffix = path.suffix.lower()
