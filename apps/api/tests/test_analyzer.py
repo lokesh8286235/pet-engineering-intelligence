@@ -45,6 +45,13 @@ def test_analyzer_detects_conventional_test_files_without_substring_false_positi
     assert not any(r.category == "testing" for r in result.risks)
 
 
+def test_analyzer_detects_standalone_test_and_spec_files(tmp_path: Path):
+    (tmp_path / "test.py").write_text("def test_root(): pass\n", encoding="utf-8")
+    (tmp_path / "spec.py").write_text("def test_spec(): pass\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert not any(r.category == "testing" for r in result.risks)
+
+
 def test_analyzer_detects_nested_spec_files(tmp_path: Path):
     spec_dir = tmp_path / "specs"
     spec_dir.mkdir()
