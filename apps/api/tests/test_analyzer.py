@@ -22,6 +22,16 @@ def test_analyzer_does_not_count_trailing_newline_as_source_line(tmp_path: Path)
     assert result.signals[0].lines == 2
 
 
+def test_analyzer_returns_files_in_deterministic_order(tmp_path: Path):
+    (tmp_path / "z.py").write_text("z = 1\n", encoding="utf-8")
+    (tmp_path / "a.py").write_text("a = 1\n", encoding="utf-8")
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (nested / "m.py").write_text("m = 1\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path), max_files=2)
+    assert [signal.path for signal in result.signals] == ["a.py", "nested/m.py"]
+
+
 def test_analyzer_flags_missing_tests(tmp_path: Path):
     (tmp_path / "main.py").write_text("x = 1\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
