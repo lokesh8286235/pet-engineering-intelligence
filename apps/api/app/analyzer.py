@@ -5,12 +5,23 @@ from pathlib import Path
 from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", "node_modules", "dist", "build", ".venv", "venv", "__pycache__"}
-SENSITIVE_FILENAMES = {".env", ".env.local", ".env.production", ".env.development", "credentials.json"}
+SENSITIVE_FILENAMES = {"credentials.json", "credentials.yml", "credentials.yaml"}
+SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
     ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".sql": "SQL", ".md": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
+
+
+def _is_sensitive(path: Path) -> bool:
+    name = path.name.lower()
+    return (
+        name in SENSITIVE_FILENAMES
+        or name == ".env"
+        or name.startswith(".env.")
+        or path.suffix.lower() in SENSITIVE_SUFFIXES
+    )
 
 
 def _files(root: Path, limit: int):
@@ -20,7 +31,7 @@ def _files(root: Path, limit: int):
             break
         if not path.is_file() or any(part in IGNORED for part in path.parts):
             continue
-        if path.name in SENSITIVE_FILENAMES:
+        if _is_sensitive(path):
             continue
         try:
             if path.is_symlink() or path.stat().st_size > 1_000_000:
@@ -35,6 +46,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     root = Path(raw_path).expanduser().resolve()
     if not root.is_dir():
         raise ValueError("path must point to an existing directory")
+    if max_files <= 0:
+        raise ValueError("max_files must be greater than zero")
 
     signals: list[FileSignal] = []
     languages: dict[str, int] = {}
