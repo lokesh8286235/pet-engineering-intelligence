@@ -30,6 +30,7 @@ def _is_test_file(path: Path) -> bool:
     stem = path.stem.lower()
     return (
         any(part in {"test", "tests", "spec", "specs"} for part in parts)
+        or stem in {"test", "spec"}
         or stem.startswith("test_")
         or stem.endswith("_test")
         or stem.startswith("spec_")
