@@ -58,10 +58,11 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
-def _files(root: Path, limit: int) -> Iterator[tuple[Path, int]]:
+def _files(root: Path, limit: int) -> Iterator[tuple[Path, int, str]]:
     count = 0
     # Walk lazily so max_files can stop traversal early, while sorting each
-    # directory keeps scan limits and returned signals deterministic.
+    # directory keeps scan limits and returned signals deterministic. Read the
+    # bounded text here so invalid/binary files do not consume the valid-file limit.
     for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
         dirs[:] = sorted(
             d for d in dirs
@@ -81,8 +82,11 @@ def _files(root: Path, limit: int) -> Iterator[tuple[Path, int]]:
                 continue
             if size_bytes > MAX_FILE_BYTES:
                 continue
+            text = _read_text(path)
+            if text is None:
+                continue
             count += 1
-            yield path, size_bytes
+            yield path, size_bytes, text
 
 
 def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
@@ -99,10 +103,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     docs = 0
     large_files: list[str] = []
 
-    for path, size_bytes in _files(root, max_files):
-        text = _read_text(path)
-        if text is None:
-            continue
+    for path, size_bytes, text in _files(root, max_files):
         # splitlines() handles LF, CRLF, and legacy CR line endings without
         # counting a trailing newline as an additional source line.
         lines = len(text.splitlines())
