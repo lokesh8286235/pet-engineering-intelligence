@@ -99,13 +99,25 @@ npm run dev
 docker compose up --build
 ```
 
+## Analyzer safety
+
+The repository analyzer is intentionally bounded and deterministic before any AI layer is invoked:
+
+- Reads at most **1 MB per candidate file** and rejects files that grow beyond that bound.
+- Rejects NUL-containing and invalid UTF-8 files instead of silently decoding corrupted content.
+- Skips sensitive credential/key files and common generated or dependency directories.
+- Does not follow symbolic links during repository traversal.
+- Caps a single analysis request at **10,000 valid text files**; rejected/binary files do not consume that limit.
+
+These constraints keep scans predictable while reducing accidental ingestion of secrets, generated artifacts, or binary data.
+
 ## Quality bar
 
 PET is being developed as a **real engineering project**, not a static portfolio demo. The target is reproducible tests, explicit architecture decisions, measurable AI quality, secure repository handling, and production-oriented deployment practices.
 
 ## Roadmap
 
-- [ ] Repository analyzer
+- [x] Repository analyzer
 - [ ] Symbol/dependency graph extraction
 - [ ] PostgreSQL + pgvector indexing
 - [ ] Hybrid retrieval + reranking
