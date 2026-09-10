@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from collections.abc import Iterator
 
 from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", "node_modules", "dist", "build", ".venv", "venv", "__pycache__"}
 SENSITIVE_FILENAMES = {"credentials.json", "credentials.yml", "credentials.yaml"}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
+MAX_FILE_BYTES = 1_000_000
+BINARY_SAMPLE_BYTES = 8192
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
     ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
@@ -40,15 +43,15 @@ def _is_test_file(path: Path) -> bool:
 
 
 def _looks_binary(path: Path) -> bool:
-    """Return True when the first 8 KiB contains a NUL byte."""
+    """Return True when the first sample contains a NUL byte."""
     try:
         with path.open("rb") as handle:
-            return b"\x00" in handle.read(8192)
+            return b"\x00" in handle.read(BINARY_SAMPLE_BYTES)
     except OSError:
         return True
 
 
-def _files(root: Path, limit: int):
+def _files(root: Path, limit: int) -> Iterator[tuple[Path, int]]:
     count = 0
     # Walk lazily so max_files can stop traversal early, while sorting each
     # directory keeps scan limits and returned signals deterministic.
@@ -69,7 +72,7 @@ def _files(root: Path, limit: int):
                 size_bytes = path.stat().st_size
             except OSError:
                 continue
-            if size_bytes > 1_000_000:
+            if size_bytes > MAX_FILE_BYTES:
                 continue
             if _looks_binary(path):
                 continue
