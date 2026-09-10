@@ -131,3 +131,12 @@ def test_analyzer_skips_invalid_utf8_files(tmp_path: Path):
     (tmp_path / "app.py").write_bytes(b"x = 1\n\xff\xfe\xfa")
     result = analyze_repository(str(tmp_path))
     assert result.files == 0
+
+
+def test_analyzer_skips_nul_bytes_beyond_binary_sample(tmp_path: Path):
+    content = b"# text\n" + (b"x" * 9000) + b"\x00"
+    (tmp_path / "app.py").write_bytes(content)
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 0
