@@ -140,3 +140,15 @@ def test_analyzer_skips_nul_bytes_beyond_binary_sample(tmp_path: Path):
     result = analyze_repository(str(tmp_path))
 
     assert result.files == 0
+
+
+def test_analyzer_skips_ignored_directories_case_insensitively(tmp_path: Path):
+    ignored = tmp_path / "Node_Modules"
+    ignored.mkdir()
+    (ignored / "dependency.js").write_text("module.exports = {};\n", encoding="utf-8")
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"

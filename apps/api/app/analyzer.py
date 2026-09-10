@@ -65,7 +65,7 @@ def _files(root: Path, limit: int) -> Iterator[tuple[Path, int]]:
     for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
         dirs[:] = sorted(
             d for d in dirs
-            if d not in IGNORED and not (Path(current) / d).is_symlink()
+            if d.lower() not in IGNORED and not (Path(current) / d).is_symlink()
         )
         for name in sorted(names):
             if count >= limit:
