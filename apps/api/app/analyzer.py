@@ -43,15 +43,6 @@ def _is_test_file(path: Path) -> bool:
     )
 
 
-def _looks_binary(path: Path) -> bool:
-    """Return True when the first sample contains a NUL byte."""
-    try:
-        with path.open("rb") as handle:
-            return b"\x00" in handle.read(BINARY_SAMPLE_BYTES)
-    except OSError:
-        return True
-
-
 def _read_text(path: Path) -> str | None:
     """Read a bounded UTF-8 text file, protecting against growth and binary data."""
     try:
@@ -59,7 +50,7 @@ def _read_text(path: Path) -> str | None:
             data = handle.read(MAX_FILE_BYTES + 1)
     except OSError:
         return None
-    if len(data) > MAX_FILE_BYTES:
+    if len(data) > MAX_FILE_BYTES or b"\x00" in data:
         return None
     try:
         return data.decode("utf-8")
@@ -89,8 +80,6 @@ def _files(root: Path, limit: int) -> Iterator[tuple[Path, int]]:
             except OSError:
                 continue
             if size_bytes > MAX_FILE_BYTES:
-                continue
-            if _looks_binary(path):
                 continue
             count += 1
             yield path, size_bytes
