@@ -98,8 +98,13 @@ def test_analyzer_skips_sensitive_files(tmp_path: Path):
 
 
 def test_analyzer_rejects_non_positive_file_limits(tmp_path: Path):
-    with pytest.raises(ValueError, match="max_files must be greater than zero"):
+    with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
         analyze_repository(str(tmp_path), max_files=0)
+
+
+def test_analyzer_rejects_excessive_file_limits(tmp_path: Path):
+    with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
+        analyze_repository(str(tmp_path), max_files=10_001)
 
 
 def test_analyzer_skips_file_that_grows_past_scan_limit(tmp_path: Path):
