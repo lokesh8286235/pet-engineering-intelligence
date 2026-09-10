@@ -51,6 +51,18 @@ def _looks_binary(path: Path) -> bool:
         return True
 
 
+def _read_text(path: Path) -> str | None:
+    """Read a bounded text file, protecting against files growing after scanning."""
+    try:
+        with path.open("rb") as handle:
+            data = handle.read(MAX_FILE_BYTES + 1)
+    except OSError:
+        return None
+    if len(data) > MAX_FILE_BYTES:
+        return None
+    return data.decode("utf-8", errors="ignore")
+
+
 def _files(root: Path, limit: int) -> Iterator[tuple[Path, int]]:
     count = 0
     # Walk lazily so max_files can stop traversal early, while sorting each
@@ -95,9 +107,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     large_files: list[str] = []
 
     for path, size_bytes in _files(root, max_files):
-        try:
-            text = path.read_text(encoding="utf-8", errors="ignore")
-        except OSError:
+        text = _read_text(path)
+        if text is None:
             continue
         # UTF-8 decoding can silently turn arbitrary binary data into text.
         # Treat NUL-containing files as binary so they don't pollute code metrics.
