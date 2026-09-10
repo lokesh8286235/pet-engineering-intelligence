@@ -10,7 +10,6 @@ IGNORED = {".git", ".next", "node_modules", "dist", "build", ".venv", "venv", "_
 SENSITIVE_FILENAMES = {"credentials.json", "credentials.yml", "credentials.yaml"}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
-BINARY_SAMPLE_BYTES = 8192
 MAX_FILES = 10_000
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
