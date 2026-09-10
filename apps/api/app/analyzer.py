@@ -11,6 +11,7 @@ SENSITIVE_FILENAMES = {"credentials.json", "credentials.yml", "credentials.yaml"
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 BINARY_SAMPLE_BYTES = 8192
+MAX_FILES = 10_000
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
     ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
@@ -99,8 +100,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     root = Path(raw_path).expanduser().resolve()
     if not root.is_dir():
         raise ValueError("path must point to an existing directory")
-    if max_files <= 0:
-        raise ValueError("max_files must be greater than zero")
+    if not 1 <= max_files <= MAX_FILES:
+        raise ValueError(f"max_files must be between 1 and {MAX_FILES}")
 
     signals: list[FileSignal] = []
     languages: dict[str, int] = {}
