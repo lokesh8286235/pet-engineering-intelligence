@@ -66,14 +66,15 @@ def _files(root: Path, limit: int):
             if _is_sensitive(path):
                 continue
             try:
-                if path.stat().st_size > 1_000_000:
-                    continue
+                size_bytes = path.stat().st_size
             except OSError:
+                continue
+            if size_bytes > 1_000_000:
                 continue
             if _looks_binary(path):
                 continue
             count += 1
-            yield path
+            yield path, size_bytes
 
 
 def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
@@ -90,10 +91,9 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     docs = 0
     large_files: list[str] = []
 
-    for path in _files(root, max_files):
+    for path, size_bytes in _files(root, max_files):
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
-            size_bytes = path.stat().st_size
         except OSError:
             continue
         # UTF-8 decoding can silently turn arbitrary binary data into text.
