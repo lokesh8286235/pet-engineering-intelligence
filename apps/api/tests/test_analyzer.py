@@ -120,3 +120,9 @@ def test_analyzer_skips_file_that_grows_past_scan_limit(tmp_path: Path):
         analyzer._read_text = original
 
     assert result.files == 0
+
+
+def test_analyzer_skips_invalid_utf8_files(tmp_path: Path):
+    (tmp_path / "app.py").write_bytes(b"x = 1\n\xff\xfe\xfa")
+    result = analyze_repository(str(tmp_path))
+    assert result.files == 0
