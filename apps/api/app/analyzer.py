@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from .models import AnalysisResult, FileSignal, Risk
@@ -49,25 +50,30 @@ def _looks_binary(path: Path) -> bool:
 
 def _files(root: Path, limit: int):
     count = 0
-    # Sort paths so scan limits and returned signals are deterministic across
-    # filesystems. This also makes repeated analyses easier to compare.
-    paths = sorted(root.rglob("*"), key=lambda path: str(path.relative_to(root)))
-    for path in paths:
-        if count >= limit:
-            break
-        if not path.is_file() or any(part in IGNORED for part in path.parts):
-            continue
-        if _is_sensitive(path):
-            continue
-        try:
-            if path.is_symlink() or path.stat().st_size > 1_000_000:
+    # Walk lazily so max_files can stop traversal early, while sorting each
+    # directory keeps scan limits and returned signals deterministic.
+    for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
+        dirs[:] = sorted(
+            d for d in dirs
+            if d not in IGNORED and not (Path(current) / d).is_symlink()
+        )
+        for name in sorted(names):
+            if count >= limit:
+                return
+            path = Path(current) / name
+            if not path.is_file() or path.is_symlink():
                 continue
-        except OSError:
-            continue
-        if _looks_binary(path):
-            continue
-        count += 1
-        yield path
+            if _is_sensitive(path):
+                continue
+            try:
+                if path.stat().st_size > 1_000_000:
+                    continue
+            except OSError:
+                continue
+            if _looks_binary(path):
+                continue
+            count += 1
+            yield path
 
 
 def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
