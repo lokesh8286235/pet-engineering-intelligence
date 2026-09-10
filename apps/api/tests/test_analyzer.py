@@ -100,3 +100,23 @@ def test_analyzer_skips_sensitive_files(tmp_path: Path):
 def test_analyzer_rejects_non_positive_file_limits(tmp_path: Path):
     with pytest.raises(ValueError, match="max_files must be greater than zero"):
         analyze_repository(str(tmp_path), max_files=0)
+
+
+def test_analyzer_skips_file_that_grows_past_scan_limit(tmp_path: Path):
+    from app import analyzer
+
+    path = tmp_path / "app.py"
+    path.write_text("x = 1\n", encoding="utf-8")
+    original = analyzer._read_text
+
+    def grow_then_read(target: Path) -> str | None:
+        target.write_bytes(b"x" * (analyzer.MAX_FILE_BYTES + 1))
+        return original(target)
+
+    analyzer._read_text = grow_then_read
+    try:
+        result = analyze_repository(str(tmp_path))
+    finally:
+        analyzer._read_text = original
+
+    assert result.files == 0
