@@ -39,9 +39,10 @@ def _is_test_file(path: Path) -> bool:
 
 
 def _looks_binary(path: Path) -> bool:
-    """Return True when a small sample contains a NUL byte."""
+    """Return True when the first 8 KiB contains a NUL byte."""
     try:
-        return b"\x00" in path.read_bytes()[:8192]
+        with path.open("rb") as handle:
+            return b"\x00" in handle.read(8192)
     except OSError:
         return True
 
