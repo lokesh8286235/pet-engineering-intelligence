@@ -30,7 +30,7 @@ MAX_FILES = 10_000
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
     ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
-    ".sql": "SQL", ".md": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
+    ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
 SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL"}
 
@@ -129,7 +129,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         total_lines += lines
         if _is_test_file(path.relative_to(root)):
             test_files += 1
-        if suffix == ".md":
+        if kind == "Markdown":
             docs += 1
         if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
