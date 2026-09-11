@@ -8,6 +8,9 @@ from .models import AnalysisResult, FileSignal, Risk
 IGNORED = {".git", ".next", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__"}
 SENSITIVE_FILENAMES = {
     ".env",
+    ".netrc",
+    ".npmrc",
+    ".pypirc",
     "credentials.json",
     "credentials.yml",
     "credentials.yaml",
