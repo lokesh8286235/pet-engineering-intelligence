@@ -107,6 +107,26 @@ def test_analyzer_rejects_excessive_file_limits(tmp_path: Path):
         analyze_repository(str(tmp_path), max_files=10_001)
 
 
+def test_analyzer_does_not_report_limit_when_exactly_at_file_count(tmp_path: Path):
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text("x = 1\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path), max_files=2)
+
+    assert result.files == 2
+    assert not any(r.category == "analysis" for r in result.risks)
+
+
+def test_analyzer_reports_limit_only_when_more_valid_files_exist(tmp_path: Path):
+    for name in ("a.py", "b.py", "c.py"):
+        (tmp_path / name).write_text("x = 1\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path), max_files=2)
+
+    assert result.files == 2
+    assert any(r.category == "analysis" and r.severity == "low" for r in result.risks)
+
+
 def test_analyzer_skips_file_that_grows_past_scan_limit(tmp_path: Path):
     from app import analyzer
 
