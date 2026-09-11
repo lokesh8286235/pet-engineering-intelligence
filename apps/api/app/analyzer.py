@@ -6,7 +6,16 @@ from pathlib import Path
 from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__"}
-SENSITIVE_FILENAMES = {"credentials.json", "credentials.yml", "credentials.yaml"}
+SENSITIVE_FILENAMES = {
+    ".env",
+    "credentials.json",
+    "credentials.yml",
+    "credentials.yaml",
+    "id_rsa",
+    "id_ed25519",
+    "id_ecdsa",
+    "id_dsa",
+}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 MAX_FILES = 10_000
@@ -21,7 +30,6 @@ def _is_sensitive(path: Path) -> bool:
     name = path.name.lower()
     return (
         name in SENSITIVE_FILENAMES
-        or name == ".env"
         or name.startswith(".env.")
         or path.suffix.lower() in SENSITIVE_SUFFIXES
     )
