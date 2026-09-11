@@ -108,6 +108,17 @@ def test_analyzer_skips_common_ssh_private_keys(tmp_path: Path):
     assert result.signals[0].path == "app.py"
 
 
+def test_analyzer_skips_common_package_auth_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for name in (".netrc", ".npmrc", ".pypirc"):
+        (tmp_path / name).write_text("TOKEN=should-not-be-scanned\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_path: Path):
     generated = tmp_path / ".Terraform"
     generated.mkdir()
