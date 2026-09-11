@@ -19,6 +19,11 @@ SENSITIVE_FILENAMES = {
     "id_ecdsa",
     "id_dsa",
 }
+SENSITIVE_RELATIVE_PATHS = {
+    (".aws", "credentials"),
+    (".docker", "config.json"),
+    (".config", "gcloud", "application_default_credentials.json"),
+}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 MAX_FILES = 10_000
@@ -31,8 +36,10 @@ EXTENSIONS = {
 
 def _is_sensitive(path: Path) -> bool:
     name = path.name.lower()
+    relative_parts = tuple(part.lower() for part in path.parts)
     return (
         name in SENSITIVE_FILENAMES
+        or any(relative_parts[-len(candidate):] == candidate for candidate in SENSITIVE_RELATIVE_PATHS)
         or name.startswith(".env.")
         or path.suffix.lower() in SENSITIVE_SUFFIXES
     )
