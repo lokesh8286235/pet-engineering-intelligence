@@ -97,6 +97,17 @@ def test_analyzer_skips_sensitive_files(tmp_path: Path):
     assert all(signal.path not in {".env", ".env.local", "credentials.json", "server.pem"} for signal in result.signals)
 
 
+def test_analyzer_skips_common_ssh_private_keys(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for name in ("id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"):
+        (tmp_path / name).write_text("-----BEGIN OPENSSH PRIVATE KEY-----\nSECRET\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_path: Path):
     generated = tmp_path / ".Terraform"
     generated.mkdir()
