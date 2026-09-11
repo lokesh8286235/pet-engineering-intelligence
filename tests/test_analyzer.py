@@ -177,6 +177,12 @@ def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_pat
     assert result.signals[0].path == "app.py"
 
 
+def test_analyzer_ignores_large_documentation_files_for_maintainability_risk(tmp_path: Path):
+    (tmp_path / "README.md").write_text("line\n" * 801, encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert not any(r.category == "maintainability" for r in result.risks)
+
+
 def test_analyzer_rejects_non_positive_file_limits(tmp_path: Path):
     with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
         analyze_repository(str(tmp_path), max_files=0)
