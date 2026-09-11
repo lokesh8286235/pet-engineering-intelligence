@@ -57,35 +57,39 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
-def _files(root: Path, limit: int) -> Iterator[tuple[Path, int, str]]:
+def _files(root: Path, limit: int) -> tuple[Iterator[tuple[Path, int, str]], bool]:
     count = 0
-    # Walk lazily so max_files can stop traversal early, while sorting each
-    # directory keeps scan limits and returned signals deterministic. Read the
-    # bounded text here so invalid/binary files do not consume the valid-file limit.
-    for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
-        dirs[:] = sorted(
-            d for d in dirs
-            if d.lower() not in IGNORED and not (Path(current) / d).is_symlink()
-        )
-        for name in sorted(names):
-            if count >= limit:
-                return
-            path = Path(current) / name
-            if not path.is_file() or path.is_symlink():
-                continue
-            if _is_sensitive(path):
-                continue
-            try:
-                size_bytes = path.stat().st_size
-            except OSError:
-                continue
-            if size_bytes > MAX_FILE_BYTES:
-                continue
-            text = _read_text(path)
-            if text is None:
-                continue
-            count += 1
-            yield path, size_bytes, text
+    truncated = False
+
+    def scan() -> Iterator[tuple[Path, int, str]]:
+        nonlocal count, truncated
+        # Read one valid file beyond the configured limit so callers can
+        # distinguish a genuinely truncated scan from an exactly-sized one.
+        for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
+            dirs[:] = sorted(
+                d for d in dirs
+                if d.lower() not in IGNORED and not (Path(current) / d).is_symlink()
+            )
+            for name in sorted(names):
+                path = Path(current) / name
+                if path.is_symlink() or not path.is_file() or _is_sensitive(path):
+                    continue
+                try:
+                    size_bytes = path.stat().st_size
+                except OSError:
+                    continue
+                if size_bytes > MAX_FILE_BYTES:
+                    continue
+                text = _read_text(path)
+                if text is None:
+                    continue
+                if count >= limit:
+                    truncated = True
+                    return
+                count += 1
+                yield path, size_bytes, text
+
+    return scan(), truncated
 
 
 def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
@@ -102,7 +106,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     docs = 0
     large_files: list[str] = []
 
-    for path, size_bytes, text in _files(root, max_files):
+    file_iter, _ = _files(root, max_files)
+    for path, size_bytes, text in file_iter:
         # splitlines() handles LF, CRLF, and legacy CR line endings without
         # counting a trailing newline as an additional source line.
         lines = len(text.splitlines())
