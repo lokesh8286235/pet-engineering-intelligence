@@ -56,6 +56,8 @@ def _is_test_file(path: Path) -> bool:
         or stem.endswith("_test")
         or stem.startswith("spec_")
         or stem.endswith("_spec")
+        or stem.endswith(".test")
+        or stem.endswith(".spec")
     )
 
 
