@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from collections.abc import Iterator
 
 from .models import AnalysisResult, FileSignal, Risk
 
@@ -57,39 +56,30 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
-def _files(root: Path, limit: int) -> tuple[Iterator[tuple[Path, int, str]], bool]:
-    count = 0
-    truncated = False
-
-    def scan() -> Iterator[tuple[Path, int, str]]:
-        nonlocal count, truncated
-        # Read one valid file beyond the configured limit so callers can
-        # distinguish a genuinely truncated scan from an exactly-sized one.
-        for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
-            dirs[:] = sorted(
-                d for d in dirs
-                if d.lower() not in IGNORED and not (Path(current) / d).is_symlink()
-            )
-            for name in sorted(names):
-                path = Path(current) / name
-                if path.is_symlink() or not path.is_file() or _is_sensitive(path):
-                    continue
-                try:
-                    size_bytes = path.stat().st_size
-                except OSError:
-                    continue
-                if size_bytes > MAX_FILE_BYTES:
-                    continue
-                text = _read_text(path)
-                if text is None:
-                    continue
-                if count >= limit:
-                    truncated = True
-                    return
-                count += 1
-                yield path, size_bytes, text
-
-    return scan(), truncated
+def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, str]], bool]:
+    found: list[tuple[Path, int, str]] = []
+    for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
+        dirs[:] = sorted(
+            d for d in dirs
+            if d.lower() not in IGNORED and not (Path(current) / d).is_symlink()
+        )
+        for name in sorted(names):
+            path = Path(current) / name
+            if path.is_symlink() or not path.is_file() or _is_sensitive(path):
+                continue
+            try:
+                size_bytes = path.stat().st_size
+            except OSError:
+                continue
+            if size_bytes > MAX_FILE_BYTES:
+                continue
+            text = _read_text(path)
+            if text is None:
+                continue
+            found.append((path, size_bytes, text))
+            if len(found) > limit:
+                return found[:limit], True
+    return found, False
 
 
 def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
@@ -106,8 +96,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     docs = 0
     large_files: list[str] = []
 
-    file_iter, _ = _files(root, max_files)
-    for path, size_bytes, text in file_iter:
+    files, truncated = _files(root, max_files)
+    for path, size_bytes, text in files:
         # splitlines() handles LF, CRLF, and legacy CR line endings without
         # counting a trailing newline as an additional source line.
         lines = len(text.splitlines())
@@ -132,7 +122,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         risks.append(Risk(severity="medium", category="documentation", message="No Markdown documentation detected", evidence=["markdown_files=0"]))
     if large_files:
         risks.append(Risk(severity="medium", category="maintainability", message=f"{len(large_files)} large source files exceed 800 lines", evidence=large_files[:8]))
-    if file_count >= max_files:
+    if truncated:
         risks.append(Risk(severity="low", category="analysis", message="File scan reached configured limit", evidence=[f"max_files={max_files}"]))
 
     score = 100
