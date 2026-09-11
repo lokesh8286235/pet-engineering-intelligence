@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .models import AnalysisResult, FileSignal, Risk
 
-IGNORED = {".git", ".next", "node_modules", "dist", "build", ".venv", "venv", "__pycache__"}
+IGNORED = {".git", ".next", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__"}
 SENSITIVE_FILENAMES = {"credentials.json", "credentials.yml", "credentials.yaml"}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
