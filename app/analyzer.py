@@ -32,6 +32,7 @@ EXTENSIONS = {
     ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".sql": "SQL", ".md": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
+SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL"}
 
 
 def _is_sensitive(path: Path) -> bool:
@@ -130,7 +131,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             test_files += 1
         if suffix == ".md":
             docs += 1
-        if lines > 800:
+        if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
