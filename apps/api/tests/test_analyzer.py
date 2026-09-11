@@ -52,6 +52,13 @@ def test_analyzer_detects_standalone_test_and_spec_files(tmp_path: Path):
     assert not any(r.category == "testing" for r in result.risks)
 
 
+def test_analyzer_detects_dotted_test_and_spec_files(tmp_path: Path):
+    (tmp_path / "parser.test.js").write_text("test('parser', () => {});\n", encoding="utf-8")
+    (tmp_path / "parser.spec.ts").write_text("it('parser', () => {});\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert not any(r.category == "testing" for r in result.risks)
+
+
 def test_analyzer_detects_nested_spec_files(tmp_path: Path):
     spec_dir = tmp_path / "specs"
     spec_dir.mkdir()
