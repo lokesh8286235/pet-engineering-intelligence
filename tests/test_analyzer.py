@@ -15,6 +15,14 @@ def test_analyzer_counts_languages_and_lines(tmp_path: Path):
     assert result.languages["Markdown"] == 1
 
 
+def test_analyzer_counts_mdx_as_markdown_documentation(tmp_path: Path):
+    (tmp_path / "docs.mdx").write_text("# Docs\n\n<Component />\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert result.files == 1
+    assert result.languages["Markdown"] == 1
+    assert not any(r.category == "documentation" for r in result.risks)
+
+
 def test_analyzer_does_not_count_trailing_newline_as_source_line(tmp_path: Path):
     (tmp_path / "main.py").write_text("one\ntwo\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
