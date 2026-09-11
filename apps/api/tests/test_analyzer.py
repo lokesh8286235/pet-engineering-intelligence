@@ -147,7 +147,9 @@ def test_analyzer_reports_limit_only_when_more_valid_files_exist(tmp_path: Path)
     result = analyze_repository(str(tmp_path), max_files=2)
 
     assert result.files == 2
-    assert any(r.category == "analysis" and r.severity == "low" for r in result.risks)
+    risk = next(r for r in result.risks if r.category == "analysis")
+    assert risk.severity == "low"
+    assert risk.message == "Analysis scan truncated at configured file limit"
 
 
 def test_analyzer_skips_file_that_grows_past_scan_limit(tmp_path: Path):
