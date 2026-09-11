@@ -131,7 +131,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     if large_files:
         risks.append(Risk(severity="medium", category="maintainability", message=f"{len(large_files)} large source files exceed 800 lines", evidence=large_files[:8]))
     if truncated:
-        risks.append(Risk(severity="low", category="analysis", message="File scan reached configured limit", evidence=[f"max_files={max_files}"]))
+        risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
 
     score = 100
     score -= 25 if test_files == 0 and file_count else 0
