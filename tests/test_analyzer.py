@@ -152,6 +152,19 @@ def test_analyzer_skips_nested_cloud_credential_files(tmp_path: Path):
     assert result.signals[0].path == "app.py"
 
 
+def test_analyzer_skips_python_tooling_cache_directories(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for dirname in (".pytest_cache", ".mypy_cache", ".ruff_cache"):
+        cache = tmp_path / dirname
+        cache.mkdir()
+        (cache / "generated.py").write_text("generated = True\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_path: Path):
     generated = tmp_path / ".Terraform"
     generated.mkdir()
