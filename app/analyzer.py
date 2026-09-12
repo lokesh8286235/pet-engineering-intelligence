@@ -142,6 +142,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     score -= 25 if test_files == 0 and file_count else 0
     score -= 10 if docs == 0 and file_count else 0
     score -= min(20, len(large_files) * 2)
+    score -= 10 if truncated else 0
     score = max(0, min(100, score))
 
     return AnalysisResult(
