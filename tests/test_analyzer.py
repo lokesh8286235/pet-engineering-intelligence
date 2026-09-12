@@ -83,6 +83,20 @@ def test_analyzer_detects_js_tests_in_dunder_tests_directory(tmp_path: Path):
     assert not any(r.category == "testing" for r in result.risks)
 
 
+def test_analyzer_counts_modern_javascript_and_typescript_module_extensions(tmp_path: Path):
+    (tmp_path / "worker.mjs").write_text("export const worker = true;\n", encoding="utf-8")
+    (tmp_path / "config.cjs").write_text("module.exports = {};\n", encoding="utf-8")
+    (tmp_path / "types.mts").write_text("export type ID = string;\n", encoding="utf-8")
+    (tmp_path / "legacy.cts").write_text("export const value = 1;\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 4
+    assert result.languages["JavaScript"] == 2
+    assert result.languages["TypeScript"] == 2
+    assert all(signal.kind in {"JavaScript", "TypeScript"} for signal in result.signals)
+
+
 def test_analyzer_skips_symlinks(tmp_path: Path):
     target = tmp_path / "outside.py"
     target.write_text("secret = True\n", encoding="utf-8")
