@@ -1,4 +1,4 @@
-from __future__
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -95,8 +95,11 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
     risks: list[Risk] = []
     file_count = len(signals)
+    source_files = sum(count for kind, count in languages.items() if kind in SOURCE_KINDS)
     if file_count == 0:
         risks.append(Risk(severity="high", category="analysis", message="No analyzable files detected", evidence=["files=0"]))
+    elif source_files == 0:
+        risks.append(Risk(severity="medium", category="analysis", message="No source-code files detected", evidence=["source_files=0"]))
     elif test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
     if file_count and docs == 0:
@@ -109,9 +112,10 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     if file_count == 0:
         score = 0
     else:
-        score -= 25 if test_files == 0 else 0
+        score -= 15 if source_files == 0 else 0
+        score -= 25 if test_files == 0 and source_files > 0 else 0
         score -= 10 if docs == 0 else 0
         score -= min(20, len(large_files) * 2)
         score -= 10 if truncated else 0
         score = max(0, min(100, score))
-    return AnalysisResult(repository=root.name, files=file_count, lines=total_lines, languages=dict(sorted(languages.items(), key=lambda item: item[1], reverse=True)), signals=signals[:100], risks=risks, health_score=score)
+    return AnalysisResult(repository=root.name, files=file_count, source_files=source_files, lines=total_lines, languages=dict(sorted(languages.items(), key=lambda item: item[1], reverse=True)), signals=signals[:100], risks=risks, health_score=score)
