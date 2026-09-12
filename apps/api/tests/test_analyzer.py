@@ -278,3 +278,13 @@ def test_api_analyzer_does_not_flag_long_markdown_as_large_source(tmp_path: Path
     (tmp_path / "README.md").write_text("line\n" * 801, encoding="utf-8")
     result = analyze_repository(str(tmp_path))
     assert not any(r.category == "maintainability" for r in result.risks)
+
+
+def test_analyzer_scores_empty_repository_as_unhealthy(tmp_path: Path):
+    result = analyze_repository(str(tmp_path))
+    assert result.files == 0
+    assert result.lines == 0
+    assert result.health_score == 0
+    risk = next(r for r in result.risks if r.category == "analysis")
+    assert risk.severity == "high"
+    assert risk.message == "No analyzable files detected"
