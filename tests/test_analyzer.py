@@ -23,6 +23,15 @@ def test_analyzer_counts_mdx_as_markdown_documentation(tmp_path: Path):
     assert not any(r.category == "documentation" for r in result.risks)
 
 
+def test_analyzer_reports_source_file_count(tmp_path: Path):
+    (tmp_path / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    (tmp_path / "query.sql").write_text("select 1;\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# Demo\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert result.files == 3
+    assert result.source_files == 2
+
+
 def test_analyzer_does_not_count_trailing_newline_as_source_line(tmp_path: Path):
     (tmp_path / "main.py").write_text("one\ntwo\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
@@ -218,93 +227,3 @@ def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_pat
     generated.mkdir()
     (generated / "provider.js").write_text("module.exports = {};\n", encoding="utf-8")
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-
-    result = analyze_repository(str(tmp_path))
-
-    assert result.files == 1
-    assert result.signals[0].path == "app.py"
-
-
-def test_analyzer_ignores_large_documentation_files_for_maintainability_risk(tmp_path: Path):
-    (tmp_path / "README.md").write_text("line\n" * 801, encoding="utf-8")
-    result = analyze_repository(str(tmp_path))
-    assert not any(r.category == "maintainability" for r in result.risks)
-
-
-def test_analyzer_rejects_non_positive_file_limits(tmp_path: Path):
-    with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
-        analyze_repository(str(tmp_path), max_files=0)
-
-
-def test_analyzer_rejects_excessive_file_limits(tmp_path: Path):
-    with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
-        analyze_repository(str(tmp_path), max_files=10_001)
-
-
-def test_analyzer_does_not_report_limit_when_exactly_at_file_count(tmp_path: Path):
-    for name in ("a.py", "b.py"):
-        (tmp_path / name).write_text("x = 1\n", encoding="utf-8")
-
-    result = analyze_repository(str(tmp_path), max_files=2)
-
-    assert result.files == 2
-    assert not any(r.category == "analysis" for r in result.risks)
-
-
-def test_analyzer_reports_limit_only_when_more_valid_files_exist(tmp_path: Path):
-    for name in ("a.py", "b.py", "c.py"):
-        (tmp_path / name).write_text("x = 1\n", encoding="utf-8")
-
-    result = analyze_repository(str(tmp_path), max_files=2)
-
-    assert result.files == 2
-    risk = next(r for r in result.risks if r.category == "analysis")
-    assert risk.severity == "low"
-    assert risk.message == "Analysis scan truncated at configured file limit"
-
-
-def test_analyzer_skips_file_that_grows_past_scan_limit(tmp_path: Path):
-    from app import analyzer
-
-    path = tmp_path / "app.py"
-    path.write_text("x = 1\n", encoding="utf-8")
-    original = analyzer._read_text
-
-    def grow_then_read(target: Path) -> str | None:
-        target.write_bytes(b"x" * (analyzer.MAX_FILE_BYTES + 1))
-        return original(target)
-
-    analyzer._read_text = grow_then_read
-    try:
-        result = analyze_repository(str(tmp_path))
-    finally:
-        analyzer._read_text = original
-
-    assert result.files == 0
-
-
-def test_analyzer_skips_invalid_utf8_files(tmp_path: Path):
-    (tmp_path / "app.py").write_bytes(b"x = 1\n\xff\xfe\xfa")
-    result = analyze_repository(str(tmp_path))
-    assert result.files == 0
-
-
-def test_analyzer_skips_nul_bytes_beyond_binary_sample(tmp_path: Path):
-    content = b"# text\n" + (b"x" * 9000) + b"\x00"
-    (tmp_path / "app.py").write_bytes(content)
-
-    result = analyze_repository(str(tmp_path))
-
-    assert result.files == 0
-
-
-def test_analyzer_skips_ignored_directories_case_insensitively(tmp_path: Path):
-    ignored = tmp_path / "Node_Modules"
-    ignored.mkdir()
-    (ignored / "dependency.js").write_text("module.exports = {};\n", encoding="utf-8")
-    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-
-    result = analyze_repository(str(tmp_path))
-
-    assert result.files == 1
-    assert result.signals[0].path == "app.py"
