@@ -200,6 +200,19 @@ def test_analyzer_skips_python_coverage_artifact_directories(tmp_path: Path):
     assert result.signals[0].path == "app.py"
 
 
+def test_analyzer_skips_generated_frontend_build_cache_directories(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for dirname in (".turbo", ".vercel"):
+        cache = tmp_path / dirname
+        cache.mkdir()
+        (cache / "generated.js").write_text("module.exports = {};\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_path: Path):
     generated = tmp_path / ".Terraform"
     generated.mkdir()
