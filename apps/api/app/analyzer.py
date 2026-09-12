@@ -5,19 +5,10 @@ from pathlib import Path
 
 from .models import AnalysisResult, FileSignal, Risk
 
-IGNORED = {".git", ".next", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__"}
+IGNORED = {".git", ".next", ".turbo", ".vercel", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
 SENSITIVE_FILENAMES = {
-    ".env",
-    ".netrc",
-    ".npmrc",
-    ".pypirc",
-    "credentials.json",
-    "credentials.yml",
-    "credentials.yaml",
-    "id_rsa",
-    "id_ed25519",
-    "id_ecdsa",
-    "id_dsa",
+    ".env", ".netrc", ".npmrc", ".pypirc", "credentials.json", "credentials.yml", "credentials.yaml",
+    "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa",
 }
 SENSITIVE_RELATIVE_PATHS = {
     (".aws", "credentials"),
@@ -28,10 +19,12 @@ SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 MAX_FILES = 10_000
 EXTENSIONS = {
-    ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
-    ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
-    ".sql": "SQL", ".md": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
+    ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript",
+    ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".java": "Java", ".go": "Go", ".rs": "Rust",
+    ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
+SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL"}
 
 
 def _is_sensitive(path: Path) -> bool:
@@ -50,7 +43,7 @@ def _is_test_file(path: Path) -> bool:
     parts = [part.lower() for part in path.parts]
     stem = path.stem.lower()
     return (
-        any(part in {"test", "tests", "spec", "specs"} for part in parts)
+        any(part in {"test", "tests", "__tests__", "spec", "specs"} for part in parts)
         or stem in {"test", "spec"}
         or stem.startswith("test_")
         or stem.endswith("_test")
@@ -118,8 +111,6 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
 
     files, truncated = _files(root, max_files)
     for path, size_bytes, text in files:
-        # splitlines() handles LF, CRLF, and legacy CR line endings without
-        # counting a trailing newline as an additional source line.
         lines = len(text.splitlines())
         rel = str(path.relative_to(root))
         suffix = path.suffix.lower()
@@ -128,9 +119,9 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         total_lines += lines
         if _is_test_file(path.relative_to(root)):
             test_files += 1
-        if suffix == ".md":
+        if kind == "Markdown":
             docs += 1
-        if lines > 800:
+        if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
