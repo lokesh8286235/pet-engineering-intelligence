@@ -13,6 +13,7 @@ def test_analyzer_counts_languages_and_lines(tmp_path: Path):
     assert result.lines == 2
     assert result.languages["Python"] == 1
     assert result.languages["Markdown"] == 1
+    assert result.source_files == 1
 
 
 def test_analyzer_does_not_count_trailing_newline_as_source_line(tmp_path: Path):
@@ -36,6 +37,20 @@ def test_analyzer_flags_missing_tests(tmp_path: Path):
     (tmp_path / "main.py").write_text("x = 1\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
     assert any(r.category == "testing" and r.severity == "high" for r in result.risks)
+
+
+def test_analyzer_flags_repositories_with_no_source_code(tmp_path: Path):
+    (tmp_path / "README.md").write_text("# Docs\n", encoding="utf-8")
+    (tmp_path / "config.json").write_text("{}\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 2
+    assert result.source_files == 0
+    assert result.health_score == 85
+    risk = next(r for r in result.risks if r.category == "analysis")
+    assert risk.severity == "medium"
+    assert risk.message == "No source-code files detected"
 
 
 def test_analyzer_detects_conventional_test_files_without_substring_false_positives(tmp_path: Path):
