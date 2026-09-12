@@ -109,7 +109,13 @@ The repository analyzer is intentionally bounded and deterministic before any AI
 - Does not follow symbolic links during repository traversal.
 - Caps a single analysis request at **10,000 valid text files**; rejected/binary files do not consume that limit.
 
-These constraints keep scans predictable while reducing accidental ingestion of secrets, generated artifacts, or binary data.
+When the API is exposed to untrusted callers, set `PET_REPOSITORY_ROOT` to the directory containing repositories the service is allowed to scan. API requests outside that resolved root are rejected before analysis. The Docker Compose configuration sets this boundary to `/workspace` for its read-only repository mount.
+
+```bash
+PET_REPOSITORY_ROOT=/workspace uvicorn app.main:app --reload --port 8000
+```
+
+For local development where callers are already trusted, the variable may be omitted; the analyzer itself still applies its file, content, symlink, and sensitive-file safeguards.
 
 ## Quality bar
 
