@@ -3,10 +3,13 @@ services:
     build: ./apps/api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     ports: ["8000:8000"]
+    environment:
+      PET_REPOSITORY_ROOT: /workspace
     volumes: [".:/workspace:ro"]
   web:
     build: ./apps/web
     ports: ["3000:3000"]
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-    depends_on: [api]
+    depends_on:
+      - api
