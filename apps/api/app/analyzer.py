@@ -6,7 +6,7 @@ from pathlib import Path
 from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", ".turbo", ".vercel", ".parcel-cache", ".cache", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
-SENSITIVE_FILENAMES = {".env", ".netrc", ".npmrc", ".pypirc", "credentials.json", "credentials.yml", "credentials.yaml", "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"}
+SENSITIVE_FILENAMES = {".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml", "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"}
 SENSITIVE_RELATIVE_PATHS = {(".aws", "credentials"), (".docker", "config.json"), (".config", "gcloud", "application_default_credentials.json")}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
