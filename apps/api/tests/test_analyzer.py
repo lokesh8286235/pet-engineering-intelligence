@@ -235,6 +235,19 @@ def test_analyzer_skips_ignored_directories_case_insensitively(tmp_path: Path):
     assert result.signals[0].path == "app.py"
 
 
+def test_analyzer_skips_common_frontend_cache_directories_case_insensitively(tmp_path: Path):
+    for dirname in (".cache", ".Parcel-Cache"):
+        generated = tmp_path / dirname
+        generated.mkdir()
+        (generated / "generated.js").write_text("module.exports = {};\n", encoding="utf-8")
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_api_analyzer_recognizes_modern_module_extensions_and_mdx(tmp_path: Path):
     (tmp_path / "server.mjs").write_text("export const app = true;\n", encoding="utf-8")
     (tmp_path / "config.cjs").write_text("module.exports = {};\n", encoding="utf-8")
