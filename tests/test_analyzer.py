@@ -106,6 +106,16 @@ def test_analyzer_counts_modern_javascript_and_typescript_module_extensions(tmp_
     assert all(signal.kind in {"JavaScript", "TypeScript"} for signal in result.signals)
 
 
+def test_analyzer_counts_vue_and_svelte_source_files(tmp_path: Path):
+    (tmp_path / "App.vue").write_text("<template><main /></template>\n", encoding="utf-8")
+    (tmp_path / "Widget.svelte").write_text("<script>let count = 0;</script>\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert result.files == 2
+    assert result.source_files == 2
+    assert result.languages["Vue"] == 1
+    assert result.languages["Svelte"] == 1
+
+
 def test_analyzer_skips_symlinks(tmp_path: Path):
     target = tmp_path / "outside.py"
     target.write_text("secret = True\n", encoding="utf-8")
