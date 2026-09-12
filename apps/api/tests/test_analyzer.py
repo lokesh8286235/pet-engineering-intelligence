@@ -233,3 +233,37 @@ def test_analyzer_skips_ignored_directories_case_insensitively(tmp_path: Path):
 
     assert result.files == 1
     assert result.signals[0].path == "app.py"
+
+
+def test_api_analyzer_recognizes_modern_module_extensions_and_mdx(tmp_path: Path):
+    (tmp_path / "server.mjs").write_text("export const app = true;\n", encoding="utf-8")
+    (tmp_path / "config.cjs").write_text("module.exports = {};\n", encoding="utf-8")
+    (tmp_path / "types.mts").write_text("export type ID = string;\n", encoding="utf-8")
+    (tmp_path / "types.cts").write_text("export const id = 1;\n", encoding="utf-8")
+    (tmp_path / "guide.mdx").write_text("# Guide\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.languages["JavaScript"] == 2
+    assert result.languages["TypeScript"] == 2
+    assert result.languages["Markdown"] == 1
+    assert not any(r.category == "documentation" for r in result.risks)
+
+
+def test_api_analyzer_ignores_generated_frontend_caches(tmp_path: Path):
+    for dirname in (".turbo", ".vercel"):
+        generated = tmp_path / dirname
+        generated.mkdir()
+        (generated / "generated.js").write_text("module.exports = {};\n", encoding="utf-8")
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
+def test_api_analyzer_does_not_flag_long_markdown_as_large_source(tmp_path: Path):
+    (tmp_path / "README.md").write_text("line\n" * 801, encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert not any(r.category == "maintainability" for r in result.risks)
