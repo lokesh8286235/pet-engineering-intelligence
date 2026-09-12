@@ -5,28 +5,53 @@ from pathlib import Path
 
 from .models import AnalysisResult, FileSignal, Risk
 
-IGNORED = {".git", ".next", ".turbo", ".vercel", ".parcel-cache", ".cache", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
-SENSITIVE_FILENAMES = {".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml", "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa"}
-SENSITIVE_RELATIVE_PATHS = {(".aws", "credentials"), (".docker", "config.json"), (".config", "gcloud", "application_default_credentials.json")}
+IGNORED = {".git", ".next", ".turbo", ".vercel", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
+SENSITIVE_FILENAMES = {
+    ".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml",
+    "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa",
+}
+SENSITIVE_RELATIVE_PATHS = {
+    (".aws", "credentials"),
+    (".docker", "config.json"),
+    (".config", "gcloud", "application_default_credentials.json"),
+}
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 MAX_FILES = 10_000
-EXTENSIONS = {".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript", ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust", ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML"}
+EXTENSIONS = {
+    ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript",
+    ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".java": "Java", ".go": "Go", ".rs": "Rust",
+    ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
+}
 SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL"}
 
 
 def _is_sensitive(path: Path) -> bool:
-    """Identify secrets using path components, independent of the current OS separator."""
     name = path.name.lower()
     relative_parts = tuple(part.lower() for part in path.parts)
-    return name in SENSITIVE_FILENAMES or any(len(relative_parts) >= len(candidate) and relative_parts[-len(candidate):] == candidate for candidate in SENSITIVE_RELATIVE_PATHS) or name.startswith(".env.") or path.suffix.lower() in SENSITIVE_SUFFIXES
+    return (
+        name in SENSITIVE_FILENAMES
+        or any(relative_parts[-len(candidate):] == candidate for candidate in SENSITIVE_RELATIVE_PATHS)
+        or name.startswith(".env.")
+        or path.suffix.lower() in SENSITIVE_SUFFIXES
+    )
 
 
 def _is_test_file(path: Path) -> bool:
     """Return True for conventional test/spec files without substring false positives."""
     parts = [part.lower() for part in path.parts]
     stem = path.stem.lower()
-    return any(part in {"test", "tests", "__tests__", "spec", "specs"} for part in parts) or stem in {"test", "spec"} or stem.startswith("test_") or stem.endswith("_test") or stem.startswith("spec_") or stem.endswith("_spec") or stem.endswith(".test") or stem.endswith(".spec")
+    return (
+        any(part in {"test", "tests", "__tests__", "spec", "specs"} for part in parts)
+        or stem in {"test", "spec"}
+        or stem.startswith("test_")
+        or stem.endswith("_test")
+        or stem.startswith("spec_")
+        or stem.endswith("_spec")
+        or stem.endswith(".test")
+        or stem.endswith(".spec")
+    )
 
 
 def _read_text(path: Path) -> str | None:
@@ -47,7 +72,10 @@ def _read_text(path: Path) -> str | None:
 def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, str]], bool]:
     found: list[tuple[Path, int, str]] = []
     for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
-        dirs[:] = sorted(d for d in dirs if d.lower() not in IGNORED and not (Path(current) / d).is_symlink())
+        dirs[:] = sorted(
+            d for d in dirs
+            if d.lower() not in IGNORED and not (Path(current) / d).is_symlink()
+        )
         for name in sorted(names):
             path = Path(current) / name
             if path.is_symlink() or not path.is_file() or _is_sensitive(path):
@@ -73,55 +101,58 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         raise ValueError("path must point to an existing directory")
     if not 1 <= max_files <= MAX_FILES:
         raise ValueError(f"max_files must be between 1 and {MAX_FILES}")
+
     signals: list[FileSignal] = []
     languages: dict[str, int] = {}
     total_lines = 0
+    source_files = 0
     test_files = 0
     docs = 0
     large_files: list[str] = []
-    empty_source_files: list[str] = []
+
     files, truncated = _files(root, max_files)
     for path, size_bytes, text in files:
         lines = len(text.splitlines())
         rel = str(path.relative_to(root))
-        kind = EXTENSIONS.get(path.suffix.lower(), "Other")
+        suffix = path.suffix.lower()
+        kind = EXTENSIONS.get(suffix, "Other")
         languages[kind] = languages.get(kind, 0) + 1
         total_lines += lines
+        if kind in SOURCE_KINDS:
+            source_files += 1
         if _is_test_file(path.relative_to(root)):
             test_files += 1
         if kind == "Markdown":
             docs += 1
         if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
-        if kind in SOURCE_KINDS and lines == 0:
-            empty_source_files.append(rel)
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
+
     risks: list[Risk] = []
     file_count = len(signals)
-    source_files = sum(count for kind, count in languages.items() if kind in SOURCE_KINDS)
-    if file_count == 0:
-        risks.append(Risk(severity="high", category="analysis", message="No analyzable files detected", evidence=["files=0"]))
-    elif source_files == 0:
-        risks.append(Risk(severity="medium", category="analysis", message="No source-code files detected", evidence=["source_files=0"]))
-    elif test_files == 0:
+    if file_count and test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
     if file_count and docs == 0:
         risks.append(Risk(severity="medium", category="documentation", message="No Markdown documentation detected", evidence=["markdown_files=0"]))
     if large_files:
         risks.append(Risk(severity="medium", category="maintainability", message=f"{len(large_files)} large source files exceed 800 lines", evidence=large_files[:8]))
-    if empty_source_files:
-        risks.append(Risk(severity="low", category="maintainability", message=f"{len(empty_source_files)} empty source files detected", evidence=empty_source_files[:8]))
     if truncated:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
+
     score = 100
-    if file_count == 0:
-        score = 0
-    else:
-        score -= 15 if source_files == 0 else 0
-        score -= 25 if test_files == 0 and source_files > 0 else 0
-        score -= 10 if docs == 0 else 0
-        score -= min(20, len(large_files) * 2)
-        score -= min(10, len(empty_source_files))
-        score -= 10 if truncated else 0
-        score = max(0, min(100, score))
-    return AnalysisResult(repository=root.name, files=file_count, source_files=source_files, lines=total_lines, languages=dict(sorted(languages.items(), key=lambda item: item[1], reverse=True)), signals=signals[:100], risks=risks, health_score=score)
+    score -= 25 if test_files == 0 and file_count else 0
+    score -= 10 if docs == 0 and file_count else 0
+    score -= min(20, len(large_files) * 2)
+    score -= 10 if truncated else 0
+    score = max(0, min(100, score))
+
+    return AnalysisResult(
+        repository=root.name,
+        files=file_count,
+        source_files=source_files,
+        lines=total_lines,
+        languages=dict(sorted(languages.items(), key=lambda item: item[1], reverse=True)),
+        signals=signals[:100],
+        risks=risks,
+        health_score=score,
+    )
