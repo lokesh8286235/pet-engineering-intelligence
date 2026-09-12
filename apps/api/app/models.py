@@ -25,6 +25,7 @@ class Risk(BaseModel):
 class AnalysisResult(BaseModel):
     repository: str = Field(min_length=1)
     files: int = Field(ge=0)
+    source_files: int = Field(ge=0)
     lines: int = Field(ge=0)
     languages: dict[str, int]
     signals: list[FileSignal]
