@@ -132,7 +132,9 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
 
     risks: list[Risk] = []
     file_count = len(signals)
-    if file_count and test_files == 0:
+    if file_count == 0:
+        risks.append(Risk(severity="high", category="analysis", message="No analyzable files detected", evidence=["files=0"]))
+    elif test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
     if file_count and docs == 0:
         risks.append(Risk(severity="medium", category="documentation", message="No Markdown documentation detected", evidence=["markdown_files=0"]))
@@ -142,10 +144,13 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
 
     score = 100
-    score -= 25 if test_files == 0 and file_count else 0
-    score -= 10 if docs == 0 and file_count else 0
-    score -= min(20, len(large_files) * 2)
-    score = max(0, min(100, score))
+    if file_count == 0:
+        score = 0
+    else:
+        score -= 25 if test_files == 0 else 0
+        score -= 10 if docs == 0 else 0
+        score -= min(20, len(large_files) * 2)
+        score = max(0, min(100, score))
 
     return AnalysisResult(
         repository=root.name,
