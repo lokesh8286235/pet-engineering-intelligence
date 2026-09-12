@@ -28,8 +28,9 @@ SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 MAX_FILES = 10_000
 EXTENSIONS = {
-    ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
-    ".jsx": "JavaScript", ".java": "Java", ".go": "Go", ".rs": "Rust",
+    ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript",
+    ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
 SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL"}
