@@ -144,14 +144,12 @@ def test_analyzer_skips_nested_cloud_credential_files(tmp_path: Path):
     assert result.signals[0].path == "app.py"
 
 
-def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_path: Path):
-    generated = tmp_path / ".Terraform"
-    generated.mkdir()
-    (generated / "provider.js").write_text("module.exports = {};\n", encoding="utf-8")
+def test_analyzer_skips_root_sensitive_relative_paths(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-
+    aws = tmp_path / ".aws"
+    aws.mkdir()
+    (aws / "credentials").write_text("aws_secret=should-not-be-scanned\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
-
     assert result.files == 1
     assert result.signals[0].path == "app.py"
 
