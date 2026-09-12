@@ -21,10 +21,11 @@ MAX_FILES = 10_000
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript",
     ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".vue": "Vue", ".svelte": "Svelte",
     ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
-SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL"}
+SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "Java", "Go", "Rust", "SQL"}
 
 
 def _is_sensitive(path: Path) -> bool:
