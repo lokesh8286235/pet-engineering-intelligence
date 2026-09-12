@@ -7,7 +7,7 @@ from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", ".turbo", ".vercel", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
 SENSITIVE_FILENAMES = {
-    ".env", ".netrc", ".npmrc", ".pypirc", "credentials.json", "credentials.yml", "credentials.yaml",
+    ".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml",
     "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa",
 }
 SENSITIVE_RELATIVE_PATHS = {
@@ -111,8 +111,6 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
 
     files, truncated = _files(root, max_files)
     for path, size_bytes, text in files:
-        # splitlines() handles LF, CRLF, and legacy CR line endings without
-        # counting a trailing newline as an additional source line.
         lines = len(text.splitlines())
         rel = str(path.relative_to(root))
         suffix = path.suffix.lower()
