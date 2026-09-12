@@ -127,11 +127,11 @@ def test_binary_files_do_not_consume_scan_limit(tmp_path: Path):
 
 def test_analyzer_skips_sensitive_files(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-    for name in (".env", ".env.local", "credentials.json", "server.pem"):
+    for name in (".env", ".env.local", ".git-credentials", "credentials.json", "server.pem"):
         (tmp_path / name).write_text("SECRET=should-not-be-scanned\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
     assert result.files == 1
-    assert all(signal.path not in {".env", ".env.local", "credentials.json", "server.pem"} for signal in result.signals)
+    assert all(signal.path not in {".env", ".env.local", ".git-credentials", "credentials.json", "server.pem"} for signal in result.signals)
 
 
 def test_analyzer_skips_common_ssh_private_keys(tmp_path: Path):
