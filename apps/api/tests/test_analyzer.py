@@ -94,6 +94,24 @@ def test_analyzer_skips_symlinks(tmp_path: Path):
     assert all(signal.path != "linked.py" for signal in result.signals)
 
 
+def test_analyzer_does_not_traverse_symlinked_directories(tmp_path: Path):
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "secret.py").write_text("secret = True\n", encoding="utf-8")
+    linked_dir = tmp_path / "linked"
+    try:
+        linked_dir.symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        return
+
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+    assert all("linked" not in signal.path for signal in result.signals)
+
+
 def test_analyzer_skips_binary_files(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
     (tmp_path / "image.bin").write_bytes(b"\x89PNG\r\n\x1a\n\x00binary")
