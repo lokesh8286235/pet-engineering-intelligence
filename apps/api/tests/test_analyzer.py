@@ -303,3 +303,19 @@ def test_analyzer_scores_empty_repository_as_unhealthy(tmp_path: Path):
     risk = next(r for r in result.risks if r.category == "analysis")
     assert risk.severity == "high"
     assert risk.message == "No analyzable files detected"
+
+
+def test_analyzer_flags_empty_source_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# Demo\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 2
+    assert result.source_files == 1
+    assert result.lines == 0
+    assert result.health_score == 90
+    risk = next(r for r in result.risks if r.category == "maintainability")
+    assert risk.severity == "low"
+    assert risk.message == "1 empty source files detected"
+    assert risk.evidence == ["app.py"]
