@@ -28,11 +28,16 @@ SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Java", "Go", "Rust", "SQL
 
 
 def _is_sensitive(path: Path) -> bool:
+    """Identify secrets using path components, independent of the current OS separator."""
     name = path.name.lower()
     relative_parts = tuple(part.lower() for part in path.parts)
     return (
         name in SENSITIVE_FILENAMES
-        or any(relative_parts[-len(candidate):] == candidate for candidate in SENSITIVE_RELATIVE_PATHS)
+        or any(
+            len(relative_parts) >= len(candidate)
+            and relative_parts[-len(candidate):] == candidate
+            for candidate in SENSITIVE_RELATIVE_PATHS
+        )
         or name.startswith(".env.")
         or path.suffix.lower() in SENSITIVE_SUFFIXES
     )
