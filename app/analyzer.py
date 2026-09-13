@@ -9,7 +9,7 @@ IGNORED = {".git", ".next", ".turbo", ".vercel", "node_modules", ".terraform", "
 IGNORED_FILENAMES = {".ds_store", "thumbs.db"}
 SENSITIVE_FILENAMES = {
     ".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml",
-    "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa",
+    "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa", "terraform.tfstate", "terraform.tfstate.backup",
 }
 SENSITIVE_RELATIVE_PATHS = {
     (".aws", "credentials"),
