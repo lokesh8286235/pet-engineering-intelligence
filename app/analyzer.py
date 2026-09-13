@@ -57,8 +57,8 @@ def _is_test_file(path: Path) -> bool:
     )
 
 
-def _read_text(path: Path) -> str | None:
-    """Read a bounded UTF-8 text file, protecting against growth and binary data."""
+def _read_text(path: Path) -> tuple[str, int] | None:
+    """Read a bounded UTF-8 text file and return its exact byte size."""
     try:
         with path.open("rb") as handle:
             data = handle.read(MAX_FILE_BYTES + 1)
@@ -67,7 +67,7 @@ def _read_text(path: Path) -> str | None:
     if len(data) > MAX_FILE_BYTES or b"\x00" in data:
         return None
     try:
-        return data.decode("utf-8")
+        return data.decode("utf-8"), len(data)
     except UnicodeDecodeError:
         return None
 
@@ -83,15 +83,10 @@ def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
             path = Path(current) / name
             if path.name.lower() in IGNORED_FILENAMES or path.is_symlink() or not path.is_file() or _is_sensitive(path):
                 continue
-            try:
-                size_bytes = path.stat().st_size
-            except OSError:
+            result = _read_text(path)
+            if result is None:
                 continue
-            if size_bytes > MAX_FILE_BYTES:
-                continue
-            text = _read_text(path)
-            if text is None:
-                continue
+            text, size_bytes = result
             found.append((path, size_bytes, len(text.splitlines())))
             if len(found) > limit:
                 return found[:limit], True
