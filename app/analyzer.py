@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .models import AnalysisResult, FileSignal, Risk
 
-IGNORED = {".git", ".next", ".turbo", ".vercel", "node_modules", ".terraform", ".gradle", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
+IGNORED = {".git", ".next", ".turbo", ".vercel", ".cache", ".parcel-cache", "node_modules", ".terraform", ".gradle", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov"}
 IGNORED_FILENAMES = {".ds_store", "thumbs.db"}
 SENSITIVE_FILENAMES = {
     ".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml", "credentials.toml", "secrets.toml",
