@@ -39,6 +39,13 @@ def test_analyzer_does_not_count_trailing_newline_as_source_line(tmp_path: Path)
     assert result.signals[0].lines == 2
 
 
+def test_analyzer_preserves_utf8_byte_size(tmp_path: Path):
+    content = "café 🚀\n"
+    (tmp_path / "main.py").write_text(content, encoding="utf-8")
+    result = analyze_repository(str(tmp_path))
+    assert result.signals[0].size_bytes == len(content.encode("utf-8"))
+
+
 def test_analyzer_returns_files_in_deterministic_order(tmp_path: Path):
     (tmp_path / "z.py").write_text("z = 1\n", encoding="utf-8")
     (tmp_path / "a.py").write_text("a = 1\n", encoding="utf-8")
