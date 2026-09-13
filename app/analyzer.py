@@ -23,10 +23,11 @@ EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript",
     ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
     ".vue": "Vue", ".svelte": "Svelte",
+    ".html": "HTML", ".htm": "HTML", ".css": "CSS", ".scss": "CSS", ".sass": "CSS",
     ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".sql": "SQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
 }
-SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "Java", "Go", "Rust", "SQL"}
+SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "HTML", "CSS", "Java", "Go", "Rust", "SQL"}
 
 
 def _is_sensitive(path: Path) -> bool:

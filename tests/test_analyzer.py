@@ -116,6 +116,19 @@ def test_analyzer_counts_vue_and_svelte_source_files(tmp_path: Path):
     assert result.languages["Svelte"] == 1
 
 
+def test_analyzer_counts_common_web_assets_as_source_files(tmp_path: Path):
+    (tmp_path / "index.html").write_text("<main>Hello</main>\n", encoding="utf-8")
+    (tmp_path / "styles.css").write_text("body { margin: 0; }\n", encoding="utf-8")
+    (tmp_path / "theme.scss").write_text("$gap: 8px;\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 3
+    assert result.source_files == 3
+    assert result.languages["HTML"] == 1
+    assert result.languages["CSS"] == 2
+
+
 def test_analyzer_rejects_invalid_max_files(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
     for value in (0, 10_001):
