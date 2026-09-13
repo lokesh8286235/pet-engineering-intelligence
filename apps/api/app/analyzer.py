@@ -85,8 +85,6 @@ def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
             text = _read_text(path)
             if text is None:
                 continue
-            # Derive size from the exact byte sequence that was decoded instead of
-            # stat'ing separately, avoiding a size/content race during scanning.
             size_bytes = len(text.encode("utf-8"))
             found.append((path, size_bytes, len(text.splitlines())))
             if len(found) > limit:
@@ -128,6 +126,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
 
     risks: list[Risk] = []
     file_count = len(signals)
+    if file_count and source_files == 0:
+        risks.append(Risk(severity="medium", category="analysis", message="No source files detected", evidence=["source_files=0"]))
     if file_count and test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
     if file_count and docs == 0:
@@ -138,6 +138,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
 
     score = 100
+    score -= 20 if source_files == 0 and file_count else 0
     score -= 25 if test_files == 0 and file_count else 0
     score -= 10 if docs == 0 and file_count else 0
     score -= min(20, len(large_files) * 2)
