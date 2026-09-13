@@ -116,6 +116,13 @@ def test_analyzer_counts_vue_and_svelte_source_files(tmp_path: Path):
     assert result.languages["Svelte"] == 1
 
 
+def test_analyzer_rejects_invalid_max_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for value in (0, 10_001):
+        with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
+            analyze_repository(str(tmp_path), max_files=value)
+
+
 def test_analyzer_skips_symlinks(tmp_path: Path):
     target = tmp_path / "outside.py"
     target.write_text("secret = True\n", encoding="utf-8")
