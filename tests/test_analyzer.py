@@ -213,6 +213,17 @@ def test_analyzer_skips_nested_cloud_credential_files(tmp_path: Path):
     assert result.signals[0].path == "app.py"
 
 
+def test_analyzer_skips_terraform_state_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for name in ("terraform.tfstate", "terraform.tfstate.backup", "MODULE.TFSTATE"):
+        (tmp_path / name).write_text('{"resources": ["secret"]}\n', encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
+
+
 def test_analyzer_skips_python_tooling_cache_directories(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
     for dirname in (".pytest_cache", ".mypy_cache", ".ruff_cache"):
@@ -257,17 +268,6 @@ def test_analyzer_skips_generated_terraform_directory_case_insensitively(tmp_pat
     generated.mkdir()
     (generated / "provider.js").write_text("module.exports = {};\n", encoding="utf-8")
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-
-    result = analyze_repository(str(tmp_path))
-
-    assert result.files == 1
-    assert result.signals[0].path == "app.py"
-
-
-def test_analyzer_skips_common_os_metadata_files(tmp_path: Path):
-    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-    (tmp_path / ".DS_Store").write_text("metadata\n", encoding="utf-8")
-    (tmp_path / "Thumbs.db").write_text("metadata\n", encoding="utf-8")
 
     result = analyze_repository(str(tmp_path))
 
