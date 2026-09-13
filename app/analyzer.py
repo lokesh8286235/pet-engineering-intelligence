@@ -71,8 +71,8 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
-def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, str]], bool]:
-    found: list[tuple[Path, int, str]] = []
+def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
+    found: list[tuple[Path, int, int]] = []
     for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
         dirs[:] = sorted(
             d for d in dirs
@@ -91,7 +91,7 @@ def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, str]], bool]:
             text = _read_text(path)
             if text is None:
                 continue
-            found.append((path, size_bytes, text))
+            found.append((path, size_bytes, len(text.splitlines())))
             if len(found) > limit:
                 return found[:limit], True
     return found, False
@@ -112,8 +112,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     large_files: list[str] = []
 
     files, truncated = _files(root, max_files)
-    for path, size_bytes, text in files:
-        lines = len(text.splitlines())
+    for path, size_bytes, lines in files:
         rel = str(path.relative_to(root))
         suffix = path.suffix.lower()
         kind = EXTENSIONS.get(suffix, "Other")
