@@ -1,77 +1,65 @@
 # PET — Personal Engineering Toolkit
 
-> **AI-native engineering intelligence for understanding software systems and turning evidence into decisions.**
+> **Repository analysis infrastructure for engineering teams.**
 
-PET is an independent engineering project exploring how AI can help engineers inspect codebases, investigate failures, prioritize engineering risk, and make better changes without hiding the evidence behind an opaque model response.
+PET is an independent systems project for turning a software repository into **bounded, deterministic, explainable engineering signals**. The goal is not to make an LLM sound intelligent; it is to establish a trustworthy analysis layer that downstream retrieval or model reasoning can consume.
 
-## Why this exists
+## The engineering problem
 
-Engineering context is fragmented across source code, tests, documentation, repository structure, and operational signals. PET builds a transparent analysis layer first, then leaves room for retrieval and model-assisted reasoning on top.
+Repository context is fragmented across source files, tests, documentation, configuration, and structure. Naive AI analysis creates two problems: it can consume too much untrusted input, and it can produce conclusions that are difficult to verify.
+
+PET attacks the first layer directly: **safe ingestion → deterministic signals → evidence-backed findings**.
 
 ```text
-Repository / Tests / Docs / Operational Signals
-                    │
-                    ▼
-             Bounded ingestion
-                    │
-                    ▼
-             Signal extraction
-                    │
-                    ▼
-          ┌───────────────────┐
-          │ Deterministic     │
-          │ engineering model │
-          └─────────┬─────────┘
-                    │
-             evidence + risks
-                    │
-          ┌─────────▼─────────┐
-          │ Optional context  │
-          │ / AI layer        │
-          └─────────┬─────────┘
-                    ▼
-             Decision + evidence
+Repository
+    │
+    ▼
+Bounded + security-aware traversal
+    │
+    ▼
+File / language / test / documentation signals
+    │
+    ▼
+Deterministic engineering model
+    │
+    ▼
+Findings + source evidence
+    │
+    └──────► optional AI / retrieval layer
 ```
 
-## What is implemented
+## What is actually implemented
 
-- **Repository intelligence** — deterministic inventory of source files, languages, tests, documentation, and maintainability signals.
-- **Security-aware scanning** — bounded reads, invalid/binary content rejection, sensitive-file exclusion, and symlink-safe traversal.
-- **API surface** — typed FastAPI request/response models for repository analysis.
-- **Web architecture** — Next.js + React frontend for presenting engineering intelligence.
-- **Provider isolation** — model access is separated from the deterministic analysis path.
-- **Engineering health signals** — findings are explainable and derived from repository artifacts rather than invented by a model.
-
-## Engineering decisions
-
-| Decision | Why |
-|---|---|
-| Analyze deterministically first | Reproducibility and debuggability matter before model reasoning. |
-| Bound file size and count | Prevent pathological scans and resource exhaustion. |
-| Reject symlink traversal | Avoid escaping the intended repository tree. |
-| Exclude credential artifacts | Do not ingest common secrets into analysis context. |
-| Keep source evidence visible | Engineers need to verify why a finding exists. |
-| Isolate providers | The core system remains testable without an API key. |
+- Deterministic repository inventory across source files, languages, tests, documentation, and maintainability signals.
+- Security-aware scanning with bounded reads, binary/invalid-content rejection, sensitive-file exclusion, and symlink-safe traversal.
+- Typed FastAPI request/response contracts for repository analysis.
+- Next.js + React interface for presenting engineering findings.
+- Provider isolation so model access does not sit on the critical deterministic analysis path.
+- Explainable engineering-health signals derived from repository artifacts rather than model-generated claims.
 
 ## Safety boundary
 
-The repository analyzer intentionally applies multiple limits before analysis:
+The analyzer enforces limits **before analysis**:
 
 - Maximum **1 MB per candidate file**.
 - Maximum **10,000 valid text files** per scan.
 - Invalid UTF-8, NUL-containing, binary, oversized, and symlinked files are skipped.
 - Common generated/dependency directories are excluded.
 - Credential/key artifacts and known sensitive configuration paths are excluded.
-- When `PET_REPOSITORY_ROOT` is configured, API requests must resolve inside that operator-defined root.
+- When `PET_REPOSITORY_ROOT` is configured, requested paths must remain inside that operator-defined root.
 
-These controls are part of the product architecture, not just documentation. The implementation keeps bounded text and metadata rather than retaining entire repositories in memory.
+These are implementation constraints, not README-only promises. The analyzer keeps bounded text and metadata rather than loading entire repositories into memory.
 
-## Stack
+## Engineering decisions
 
-**Frontend:** Next.js · React · TypeScript  
-**Backend:** Python · FastAPI · Pydantic  
-**Data / AI direction:** PostgreSQL · pgvector · RAG · evaluation  
-**Platform:** Docker · GitHub Actions · AWS/Kubernetes-ready architecture
+| Decision | Reason |
+|---|---|
+| Deterministic first | Creates a reproducible source of truth before AI reasoning. |
+| Evidence stays attached | Findings can be inspected instead of trusted blindly. |
+| Explicit resource bounds | Prevents pathological repository scans. |
+| Sensitive-path filtering | Reduces the chance of ingesting credential material. |
+| Symlink rejection | Prevents traversal outside the intended tree. |
+| Provider isolation | Keeps the core path testable without API credentials. |
 
 ## Quick start
 
@@ -112,15 +100,23 @@ docker compose up --build
 
 `GET /health` provides a lightweight service check.
 
-## Evaluation mindset
+## How I evaluate it
 
-PET is developed around a simple loop:
+PET follows:
 
 ```text
-Hypothesis → implementation → adversarial test → evidence → iterate
+Hypothesis
+   ↓
+Implementation
+   ↓
+Adversarial / failure-mode test
+   ↓
+Evidence
+   ↓
+Iteration
 ```
 
-A repository-intelligence system should not receive credit merely for producing plausible prose. Findings need deterministic inputs, explicit rules, and tests for failure modes.
+A repository-intelligence system should fail explicitly when its inputs are unsafe or unsupported. Plausible prose is not evidence.
 
 ## Roadmap
 
@@ -138,7 +134,7 @@ A repository-intelligence system should not receive credit merely for producing 
 
 ## Status
 
-**Active independent build.** The current focus is making repository analysis more structurally aware, measurable, and useful before adding heavier agentic behavior.
+**Active independent build.** Current work focuses on structural analysis, measurable evaluation, and safe repository ingestion before adding heavier agentic behavior.
 
 ## License
 
