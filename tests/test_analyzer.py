@@ -221,7 +221,7 @@ def test_analyzer_skips_python_coverage_artifact_directories(tmp_path: Path):
 
 def test_analyzer_skips_generated_frontend_build_cache_directories(tmp_path: Path):
     (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
-    for dirname in (".turbo", ".vercel"):
+    for dirname in (".turbo", ".vercel", ".cache", ".parcel-cache"):
         cache = tmp_path / dirname
         cache.mkdir()
         (cache / "generated.js").write_text("module.exports = {};\n", encoding="utf-8")
