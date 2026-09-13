@@ -292,3 +292,14 @@ def test_analyzer_skips_gradle_build_artifacts(tmp_path: Path):
 
     assert result.files == 1
     assert result.signals[0].path == "app.py"
+
+
+def test_analyzer_skips_toml_credential_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+    for name in ("credentials.toml", "secrets.toml", "CREDENTIALS.TOML"):
+        (tmp_path / name).write_text("token = 'should-not-be-scanned'\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 1
+    assert result.signals[0].path == "app.py"
