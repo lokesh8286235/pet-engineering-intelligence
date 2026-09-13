@@ -82,15 +82,12 @@ def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
             path = Path(current) / name
             if path.is_symlink() or not path.is_file() or _is_sensitive(path):
                 continue
-            try:
-                size_bytes = path.stat().st_size
-            except OSError:
-                continue
-            if size_bytes > MAX_FILE_BYTES:
-                continue
             text = _read_text(path)
             if text is None:
                 continue
+            # Derive size from the exact byte sequence that was decoded instead of
+            # stat'ing separately, avoiding a size/content race during scanning.
+            size_bytes = len(text.encode("utf-8"))
             found.append((path, size_bytes, len(text.splitlines())))
             if len(found) > limit:
                 return found[:limit], True
