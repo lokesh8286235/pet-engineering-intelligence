@@ -1,77 +1,77 @@
 # PET — Personal Engineering Toolkit
 
-> **An AI-native engineering workspace for turning software signals into actionable decisions.**
+> **AI-native engineering intelligence for understanding software systems and turning evidence into decisions.**
 
-**Independent Project · AI Engineering · Full-Stack · Developer Tools**
+PET is an independent engineering project exploring how AI can help engineers inspect codebases, investigate failures, prioritize engineering risk, and make better changes without hiding the evidence behind an opaque model response.
 
-PET is an independent engineering project exploring how AI can help engineers understand code, investigate failures, prioritize technical debt, and make better changes while keeping the underlying evidence visible.
+## Why this exists
 
-## Why PET?
-
-Engineering signals are fragmented across source code, tests, logs, pull requests, incidents, and documentation. PET creates a transparent intelligence layer across those signals.
+Engineering context is fragmented across source code, tests, documentation, repository structure, and operational signals. PET builds a transparent analysis layer first, then leaves room for retrieval and model-assisted reasoning on top.
 
 ```text
-Repository / Logs / Tests / PRs
-            │
-            ▼
-      ┌─────────────┐
-      │ Signal Layer│  normalize + fingerprint
-      └──────┬──────┘
-             ▼
-      ┌─────────────┐
-      │   Context   │  retrieve relevant evidence
-      │    Engine   │
-      └──────┬──────┘
-             ▼
-      ┌─────────────┐
-      │ Intelligence│  explain / diagnose / recommend
-      │    Layer    │
-      └──────┬──────┘
-             ▼
-       Decision + Evidence
+Repository / Tests / Docs / Operational Signals
+                    │
+                    ▼
+             Bounded ingestion
+                    │
+                    ▼
+             Signal extraction
+                    │
+                    ▼
+          ┌───────────────────┐
+          │ Deterministic     │
+          │ engineering model │
+          └─────────┬─────────┘
+                    │
+             evidence + risks
+                    │
+          ┌─────────▼─────────┐
+          │ Optional context  │
+          │ / AI layer        │
+          └─────────┬─────────┘
+                    ▼
+             Decision + evidence
 ```
 
-## Core capabilities
+## What is implemented
 
-- **Code intelligence** — inspect repository structure, symbols, dependencies, and hotspots.
-- **Failure investigation** — correlate errors with recent changes and relevant source context.
-- **Engineering health** — surface maintainability, testing, documentation, and reliability signals.
-- **Evidence-first answers** — keep relevant source evidence attached to conclusions.
-- **Provider-neutral AI** — model access stays behind a replaceable interface.
-- **Local-first development** — deterministic analysis remains useful without an external model API.
+- **Repository intelligence** — deterministic inventory of source files, languages, tests, documentation, and maintainability signals.
+- **Security-aware scanning** — bounded reads, invalid/binary content rejection, sensitive-file exclusion, and symlink-safe traversal.
+- **API surface** — typed FastAPI request/response models for repository analysis.
+- **Web architecture** — Next.js + React frontend for presenting engineering intelligence.
+- **Provider isolation** — model access is separated from the deterministic analysis path.
+- **Engineering health signals** — findings are explainable and derived from repository artifacts rather than invented by a model.
 
-## Engineering principles
+## Engineering decisions
 
-| Principle | PET approach |
+| Decision | Why |
 |---|---|
-| Evidence over confidence | Return source context with conclusions |
-| Determinism where possible | Analyze before invoking AI |
-| Provider neutrality | Isolate model access behind interfaces |
-| Secure by default | Bound reads and avoid symlink traversal |
-| Observable systems | Measure latency, errors, quality, and cost |
-| Small interfaces | Separate ingestion, context, intelligence, and presentation |
+| Analyze deterministically first | Reproducibility and debuggability matter before model reasoning. |
+| Bound file size and count | Prevent pathological scans and resource exhaustion. |
+| Reject symlink traversal | Avoid escaping the intended repository tree. |
+| Exclude credential artifacts | Do not ingest common secrets into analysis context. |
+| Keep source evidence visible | Engineers need to verify why a finding exists. |
+| Isolate providers | The core system remains testable without an API key. |
+
+## Safety boundary
+
+The repository analyzer intentionally applies multiple limits before analysis:
+
+- Maximum **1 MB per candidate file**.
+- Maximum **10,000 valid text files** per scan.
+- Invalid UTF-8, NUL-containing, binary, oversized, and symlinked files are skipped.
+- Common generated/dependency directories are excluded.
+- Credential/key artifacts and known sensitive configuration paths are excluded.
+- When `PET_REPOSITORY_ROOT` is configured, API requests must resolve inside that operator-defined root.
+
+These controls are part of the product architecture, not just documentation. The implementation keeps bounded text and metadata rather than retaining entire repositories in memory.
 
 ## Stack
 
 **Frontend:** Next.js · React · TypeScript  
 **Backend:** Python · FastAPI · Pydantic  
-**Data:** PostgreSQL · pgvector · Redis  
-**AI:** RAG · tool calling · structured outputs · evaluation  
+**Data / AI direction:** PostgreSQL · pgvector · RAG · evaluation  
 **Platform:** Docker · GitHub Actions · AWS/Kubernetes-ready architecture
-
-## Repository layout
-
-```text
-pet-engineering-intelligence/
-├── apps/
-│   ├── api/              # FastAPI service
-│   └── web/              # Next.js interface
-├── packages/             # Shared contracts and utilities
-├── evaluation/           # Retrieval and answer-quality benchmarks
-├── docs/                 # Architecture decisions and API notes
-├── tests/                # Unit, integration, and end-to-end tests
-└── .github/workflows/    # Continuous integration
-```
 
 ## Quick start
 
@@ -99,43 +99,46 @@ npm run dev
 docker compose up --build
 ```
 
-## Analyzer safety
+## API
 
-The repository analyzer is intentionally bounded and deterministic before any AI layer is invoked:
+`POST /v1/analyze`
 
-- Reads at most **1 MB per candidate file** and rejects files that grow beyond that bound.
-- Rejects NUL-containing and invalid UTF-8 files instead of silently decoding corrupted content.
-- Skips sensitive credential/key files and common generated or dependency directories.
-- Does not follow symbolic links during repository traversal.
-- Caps a single analysis request at **10,000 valid text files**; rejected/binary files do not consume that limit.
-
-When the API is exposed to untrusted callers, set `PET_REPOSITORY_ROOT` to the directory containing repositories the service is allowed to scan. API requests outside that resolved root are rejected before analysis. The Docker Compose configuration sets this boundary to `/workspace` for its read-only repository mount.
-
-```bash
-PET_REPOSITORY_ROOT=/workspace uvicorn app.main:app --reload --port 8000
+```json
+{
+  "path": "/workspace/example",
+  "max_files": 2500
+}
 ```
 
-For local development where callers are already trusted, the variable may be omitted; the analyzer itself still applies its file, content, symlink, and sensitive-file safeguards.
+`GET /health` provides a lightweight service check.
 
-## Quality bar
+## Evaluation mindset
 
-PET is being developed as a **real engineering project**, not a static portfolio demo. The target is reproducible tests, explicit architecture decisions, measurable AI quality, secure repository handling, and production-oriented deployment practices.
+PET is developed around a simple loop:
+
+```text
+Hypothesis → implementation → adversarial test → evidence → iterate
+```
+
+A repository-intelligence system should not receive credit merely for producing plausible prose. Findings need deterministic inputs, explicit rules, and tests for failure modes.
 
 ## Roadmap
 
-- [x] Repository analyzer
-- [ ] Symbol/dependency graph extraction
-- [ ] PostgreSQL + pgvector indexing
-- [ ] Hybrid retrieval + reranking
-- [ ] Repository-aware agent tools
-- [ ] Failure/incident investigation workflow
-- [ ] Evaluation harness and regression gates
+- [x] Bounded repository analyzer
+- [x] Test/documentation/maintainability signals
+- [x] Sensitive-file and symlink protections
+- [x] FastAPI service and frontend foundation
+- [ ] Symbol and dependency graph extraction
+- [ ] Hybrid lexical + vector retrieval
+- [ ] Repository-aware investigation workflows
+- [ ] PR risk and change-impact analysis
 - [ ] OpenTelemetry instrumentation
-- [ ] Production deployment
+- [ ] Versioned evaluation datasets and quality gates
+- [ ] Production deployment hardening
 
 ## Status
 
-**Active independent build.** Architecture and implementation will evolve as capabilities are validated.
+**Active independent build.** The current focus is making repository analysis more structurally aware, measurable, and useful before adding heavier agentic behavior.
 
 ## License
 
