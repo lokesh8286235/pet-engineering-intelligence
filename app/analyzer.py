@@ -19,6 +19,7 @@ SENSITIVE_RELATIVE_PATHS = {
 SENSITIVE_SUFFIXES = {".pem", ".key", ".p12", ".pfx"}
 MAX_FILE_BYTES = 1_000_000
 MAX_FILES = 10_000
+MAX_SIGNALS = 100
 EXTENSIONS = {
     ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript", ".mts": "TypeScript", ".cts": "TypeScript",
     ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
@@ -149,6 +150,13 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         risks.append(Risk(severity="medium", category="maintainability", message=f"{len(large_files)} large source files exceed 800 lines", evidence=large_files[:8]))
     if truncated:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
+    if file_count > MAX_SIGNALS:
+        risks.append(Risk(
+            severity="low",
+            category="analysis",
+            message="Detailed file signals truncated in the result",
+            evidence=[f"signals={file_count}", f"returned_signals={MAX_SIGNALS}"],
+        ))
 
     score = 0 if file_count == 0 else 100
     score -= 20 if file_count and source_files == 0 else 0
@@ -163,7 +171,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         files=file_count,
         lines=total_lines,
         languages=dict(sorted(languages.items(), key=lambda item: item[1], reverse=True)),
-        signals=signals[:100],
+        signals=signals[:MAX_SIGNALS],
         risks=risks,
         health_score=score,
     )
