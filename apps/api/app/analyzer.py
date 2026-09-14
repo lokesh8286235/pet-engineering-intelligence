@@ -130,7 +130,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     if file_count == 0:
         risks.append(Risk(severity="high", category="analysis", message="No analyzable text files detected", evidence=["files=0"]))
     elif source_files == 0:
-        risks.append(Risk(severity="medium", category="analysis", message="No source files detected", evidence=["source_files=0"]))
+        risks.append(Risk(severity="medium", category="analysis", message="No source-code files detected", evidence=["source_files=0"]))
     if file_count and test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
     if file_count and docs == 0:
