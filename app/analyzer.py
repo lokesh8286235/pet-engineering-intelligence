@@ -104,6 +104,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     languages: dict[str, int] = {}
     total_lines = 0
     test_files = 0
+    source_files = 0
     docs = 0
     large_files: list[str] = []
 
@@ -116,6 +117,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         total_lines += lines
         if _is_test_file(path.relative_to(root)):
             test_files += 1
+        if kind in SOURCE_KINDS:
+            source_files += 1
         if kind == "Markdown":
             docs += 1
         if kind in SOURCE_KINDS and lines > 800:
@@ -131,6 +134,13 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             message="No analyzable text files detected",
             evidence=["files=0"],
         ))
+    elif source_files == 0:
+        risks.append(Risk(
+            severity="medium",
+            category="analysis",
+            message="No source files detected",
+            evidence=[f"files={file_count}", "source_files=0"],
+        ))
     elif test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
     if file_count and docs == 0:
@@ -141,7 +151,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
 
     score = 0 if file_count == 0 else 100
-    score -= 25 if test_files == 0 and file_count else 0
+    score -= 20 if file_count and source_files == 0 else 0
+    score -= 25 if test_files == 0 and source_files else 0
     score -= 10 if docs == 0 and file_count else 0
     score -= min(20, len(large_files) * 2)
     score -= 10 if truncated else 0
