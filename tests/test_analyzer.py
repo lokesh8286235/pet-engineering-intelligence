@@ -32,6 +32,24 @@ def test_analyzer_reports_source_file_count(tmp_path: Path):
     assert result.source_files == 2
 
 
+def test_analyzer_reports_documentation_only_repositories_as_analyzable_but_without_source(tmp_path: Path):
+    (tmp_path / "README.md").write_text("# Documentation\n", encoding="utf-8")
+    (tmp_path / "ARCHITECTURE.md").write_text("# Architecture\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 2
+    assert result.source_files == 0
+    assert result.health_score == 80
+    assert any(
+        r.category == "analysis"
+        and r.severity == "medium"
+        and r.message == "No source files detected"
+        and r.evidence == ["files=2", "source_files=0"]
+        for r in result.risks
+    )
+
+
 def test_analyzer_does_not_count_trailing_newline_as_source_line(tmp_path: Path):
     (tmp_path / "main.py").write_text("one\ntwo\n", encoding="utf-8")
     result = analyze_repository(str(tmp_path))
