@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .models import AnalysisResult, FileSignal, Risk
 
-IGNORED = {".git", ".next", ".turbo", ".vercel", ".cache", ".parcel-cache", "node_modules", ".terraform", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov", ".ds_store", "thumbs.db"}
+IGNORED = {".git", ".next", ".turbo", ".vercel", ".cache", ".parcel-cache", "node_modules", ".terraform", ".gradle", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov", ".ds_store", "thumbs.db"}
 SENSITIVE_FILENAMES = {
     ".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml",
     "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa",
@@ -126,7 +126,9 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
 
     risks: list[Risk] = []
     file_count = len(signals)
-    if file_count and source_files == 0:
+    if file_count == 0:
+        risks.append(Risk(severity="high", category="analysis", message="No analyzable text files detected", evidence=["files=0"]))
+    elif source_files == 0:
         risks.append(Risk(severity="medium", category="analysis", message="No source files detected", evidence=["source_files=0"]))
     if file_count and test_files == 0:
         risks.append(Risk(severity="high", category="testing", message="No test/spec files detected", evidence=["test_files=0"]))
@@ -137,7 +139,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     if truncated:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
 
-    score = 100
+    score = 0 if file_count == 0 else 100
     score -= 20 if source_files == 0 and file_count else 0
     score -= 25 if test_files == 0 and file_count else 0
     score -= 10 if docs == 0 and file_count else 0
