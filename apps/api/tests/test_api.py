@@ -25,6 +25,12 @@ def test_cors_origins_ignore_blank_entries(monkeypatch):
     assert _cors_origins() == ["https://app.example.com"]
 
 
+def test_cors_origins_fall_back_when_configuration_is_blank(monkeypatch):
+    monkeypatch.setenv("PET_CORS_ORIGINS", " , ")
+
+    assert _cors_origins() == ["http://localhost:3000"]
+
+
 def test_analyze_rejects_invalid_max_files(tmp_path):
     response = client.post("/v1/analyze", json={"path": str(tmp_path), "max_files": 0})
 
