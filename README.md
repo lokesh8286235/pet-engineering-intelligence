@@ -73,6 +73,12 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
+For a deployed frontend, configure the API's allowed browser origins with `PET_CORS_ORIGINS`. Use a comma-separated list for multiple origins; if unset, the API defaults to `http://localhost:3000` for local development.
+
+```bash
+export PET_CORS_ORIGINS="https://app.example.com,https://staging.example.com"
+```
+
 ### Web
 
 ```bash
