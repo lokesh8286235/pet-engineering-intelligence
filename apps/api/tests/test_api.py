@@ -13,6 +13,12 @@ def test_health():
     assert response.json()["status"] == "ok"
 
 
+def test_health_is_not_cacheable():
+    response = client.get("/health")
+
+    assert response.headers["cache-control"] == "no-store"
+
+
 def test_cors_origins_are_configurable(monkeypatch):
     monkeypatch.setenv("PET_CORS_ORIGINS", "https://app.example.com, https://admin.example.com")
 
