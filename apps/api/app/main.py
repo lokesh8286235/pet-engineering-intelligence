@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from .analyzer import analyze_repository
@@ -41,7 +41,8 @@ def _validate_allowed_root(path: str) -> None:
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+def health(response: Response) -> dict[str, str]:
+    response.headers["Cache-Control"] = "no-store"
     return {"status": "ok", "service": "pet-api"}
 
 
