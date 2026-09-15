@@ -13,7 +13,8 @@ app = FastAPI(title="PET API", version="0.1.0", description="Personal Engineerin
 def _cors_origins() -> list[str]:
     """Return explicitly configured browser origins, with a local-dev default."""
     raw_origins = os.getenv("PET_CORS_ORIGINS", "http://localhost:3000")
-    return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    return origins or ["http://localhost:3000"]
 
 
 app.add_middleware(
