@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import _cors_origins, app
 
 client = TestClient(app)
 
@@ -11,6 +11,18 @@ def test_health():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+def test_cors_origins_are_configurable(monkeypatch):
+    monkeypatch.setenv("PET_CORS_ORIGINS", "https://app.example.com, https://admin.example.com")
+
+    assert _cors_origins() == ["https://app.example.com", "https://admin.example.com"]
+
+
+def test_cors_origins_ignore_blank_entries(monkeypatch):
+    monkeypatch.setenv("PET_CORS_ORIGINS", "https://app.example.com, ,")
+
+    assert _cors_origins() == ["https://app.example.com"]
 
 
 def test_analyze_rejects_invalid_max_files(tmp_path):
