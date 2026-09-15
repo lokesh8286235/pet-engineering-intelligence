@@ -50,6 +50,12 @@ The analyzer enforces limits **before analysis**:
 
 These are implementation constraints, not README-only promises. The analyzer keeps bounded text and metadata rather than loading entire repositories into memory.
 
+### Scan truncation semantics
+
+`max_files` is a **scan limit**, not just an output limit. When the analyzer reaches the configured limit, it stops traversing and reports an `analysis` risk indicating that the scan was truncated. The API accepts values from **1 to 10,000**; the default is **2,500**.
+
+The result also caps detailed per-file `signals` at **100**. If more files were analyzed than can be represented in that list, the result includes a low-severity `analysis` risk describing the number of analyzed signals and returned signals. Aggregate file/language/test/documentation metrics still represent the full bounded scan result.
+
 ## Engineering decisions
 
 | Decision | Reason |
