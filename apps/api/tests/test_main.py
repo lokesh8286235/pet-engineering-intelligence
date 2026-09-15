@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from fastapi import Response
 
-from app.main import _validate_allowed_root, health
+from app.main import _cors_origins, _validate_allowed_root, health
 
 
 def test_validate_allowed_root_accepts_repository_descendant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -33,3 +33,15 @@ def test_health_prevents_caching() -> None:
 
     assert payload == {"status": "ok", "service": "pet-api"}
     assert response.headers["Cache-Control"] == "no-store"
+
+
+def test_cors_origins_support_multiple_configured_origins(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PET_CORS_ORIGINS", "https://app.example.com, https://admin.example.com")
+
+    assert _cors_origins() == ["https://app.example.com", "https://admin.example.com"]
+
+
+def test_cors_origins_falls_back_when_configuration_is_blank(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PET_CORS_ORIGINS", "  ,  ")
+
+    assert _cors_origins() == ["http://localhost:3000"]
