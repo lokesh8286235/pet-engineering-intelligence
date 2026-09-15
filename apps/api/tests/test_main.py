@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import pytest
+from fastapi import Response
 
-from app.main import _validate_allowed_root
+from app.main import _validate_allowed_root, health
 
 
 def test_validate_allowed_root_accepts_repository_descendant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -23,3 +24,12 @@ def test_validate_allowed_root_rejects_paths_outside_configured_root(tmp_path: P
 
     with pytest.raises(ValueError, match="within PET_REPOSITORY_ROOT"):
         _validate_allowed_root(str(outside))
+
+
+def test_health_prevents_caching() -> None:
+    response = Response()
+
+    payload = health(response)
+
+    assert payload == {"status": "ok", "service": "pet-api"}
+    assert response.headers["Cache-Control"] == "no-store"
