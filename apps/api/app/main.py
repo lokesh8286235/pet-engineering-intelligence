@@ -8,9 +8,17 @@ from .analyzer import analyze_repository
 from .models import AnalyzeRequest, AnalysisResult
 
 app = FastAPI(title="PET API", version="0.1.0", description="Personal Engineering Toolkit API")
+
+
+def _cors_origins() -> list[str]:
+    """Return explicitly configured browser origins, with a local-dev default."""
+    raw_origins = os.getenv("PET_CORS_ORIGINS", "http://localhost:3000")
+    return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
