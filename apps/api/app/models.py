@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class AnalyzeRequest(BaseModel):
     path: str = Field(min_length=1, description="Local repository path")
-    max_files: int = Field(default=2500, ge=1, le=10000)
+    max_files: int = Field(default=2500, ge=1, le=10000, strict=True)
 
     @field_validator("path")
     @classmethod
