@@ -11,9 +11,11 @@ app = FastAPI(title="PET API", version="0.1.0", description="Personal Engineerin
 
 
 def _cors_origins() -> list[str]:
-    """Return explicitly configured browser origins, with a local-dev default."""
+    """Return configured browser origins, rejecting wildcard credentials access."""
     raw_origins = os.getenv("PET_CORS_ORIGINS", "http://localhost:3000")
     origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    if "*" in origins:
+        raise ValueError("PET_CORS_ORIGINS must list specific origins; '*' is not allowed with credentials")
     return origins or ["http://localhost:3000"]
 
 
