@@ -22,6 +22,14 @@ class FileSignal(BaseModel):
     size_bytes: int = Field(ge=0, strict=True)
     lines: int = Field(ge=0, strict=True)
 
+    @field_validator("path", "kind")
+    @classmethod
+    def validate_text_fields(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("value must not be blank")
+        return value
+
 
 class Risk(BaseModel):
     severity: str = Field(min_length=1)
