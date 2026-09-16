@@ -38,4 +38,4 @@ class AnalysisResult(BaseModel):
     languages: dict[str, int]
     signals: list[FileSignal]
     risks: list[Risk]
-    health_score: int = Field(ge=0, le=100)
+    health_score: int = Field(ge=0, le=100, strict=True)
