@@ -58,3 +58,10 @@ def test_cors_origins_falls_back_when_configuration_is_blank(monkeypatch: pytest
     monkeypatch.setenv("PET_CORS_ORIGINS", "  ,  ")
 
     assert _cors_origins() == ["http://localhost:3000"]
+
+
+def test_cors_origins_rejects_wildcard_with_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PET_CORS_ORIGINS", "https://app.example.com, *")
+
+    with pytest.raises(ValueError, match="specific origins"):
+        _cors_origins()
