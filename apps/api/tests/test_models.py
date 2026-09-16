@@ -57,6 +57,28 @@ def test_risk_requires_meaningful_text():
         Risk(severity="medium", category="quality", message="")
 
 
+def test_risk_normalizes_text_and_evidence():
+    risk = Risk(
+        severity="  medium  ",
+        category="  quality  ",
+        message="  problem  ",
+        evidence=["  evidence line 1  ", "evidence line 2"],
+    )
+
+    assert risk.severity == "medium"
+    assert risk.category == "quality"
+    assert risk.message == "problem"
+    assert risk.evidence == ["evidence line 1", "evidence line 2"]
+
+
+def test_risk_rejects_blank_text_and_evidence():
+    with pytest.raises(ValidationError):
+        Risk(severity="   ", category="quality", message="problem")
+
+    with pytest.raises(ValidationError):
+        Risk(severity="medium", category="quality", message="problem", evidence=["   "])
+
+
 def test_analysis_result_enforces_health_score_bounds():
     base = dict(
         repository="demo",
