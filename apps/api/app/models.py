@@ -64,6 +64,14 @@ class AnalysisResult(BaseModel):
     risks: list[Risk]
     health_score: int = Field(ge=0, le=100, strict=True)
 
+    @field_validator("repository")
+    @classmethod
+    def validate_repository(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("repository must not be blank")
+        return value
+
     @field_validator("languages")
     @classmethod
     def validate_languages(cls, value: dict[str, int]) -> dict[str, int]:
