@@ -144,3 +144,18 @@ def test_analysis_result_rejects_invalid_language_counts():
 
     with pytest.raises(ValidationError):
         AnalysisResult(**base, languages={"   ": 1})
+
+
+def test_analysis_result_rejects_duplicate_normalized_language_names():
+    base = dict(
+        repository="demo",
+        files=1,
+        source_files=1,
+        lines=10,
+        signals=[],
+        risks=[],
+        health_score=100,
+    )
+
+    with pytest.raises(ValidationError):
+        AnalysisResult(**base, languages={"Python": 10, " Python ": 5})
