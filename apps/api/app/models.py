@@ -56,6 +56,8 @@ class AnalysisResult(BaseModel):
             language = language.strip()
             if not language:
                 raise ValueError("language names must not be blank")
+            if language in normalized:
+                raise ValueError("language names must be unique after trimming")
             if type(count) is not int or count < 0:
                 raise ValueError("language counts must be non-negative integers")
             normalized[language] = count
