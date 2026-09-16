@@ -47,3 +47,16 @@ class AnalysisResult(BaseModel):
     signals: list[FileSignal]
     risks: list[Risk]
     health_score: int = Field(ge=0, le=100, strict=True)
+
+    @field_validator("languages")
+    @classmethod
+    def validate_languages(cls, value: dict[str, int]) -> dict[str, int]:
+        normalized: dict[str, int] = {}
+        for language, count in value.items():
+            language = language.strip()
+            if not language:
+                raise ValueError("language names must not be blank")
+            if type(count) is not int or count < 0:
+                raise ValueError("language counts must be non-negative integers")
+            normalized[language] = count
+        return normalized
