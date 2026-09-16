@@ -1,7 +1,17 @@
 import pytest
 from pydantic import ValidationError
 
-from app.models import AnalysisResult, FileSignal, Risk
+from app.models import AnalysisResult, AnalyzeRequest, FileSignal, Risk
+
+
+def test_analyze_request_trims_path():
+    request = AnalyzeRequest(path="  /workspace/repo  ")
+    assert request.path == "/workspace/repo"
+
+
+def test_analyze_request_rejects_blank_path():
+    with pytest.raises(ValidationError):
+        AnalyzeRequest(path="   ")
 
 
 def test_file_signal_rejects_negative_metrics():
