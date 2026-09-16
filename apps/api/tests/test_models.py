@@ -14,6 +14,11 @@ def test_analyze_request_rejects_blank_path():
         AnalyzeRequest(path="   ")
 
 
+def test_analyze_request_rejects_boolean_max_files():
+    with pytest.raises(ValidationError):
+        AnalyzeRequest(path="/workspace/repo", max_files=True)
+
+
 def test_file_signal_rejects_negative_metrics():
     with pytest.raises(ValidationError):
         FileSignal(path="app.py", kind="python", size_bytes=-1, lines=1)
