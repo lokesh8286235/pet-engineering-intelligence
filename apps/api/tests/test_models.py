@@ -79,3 +79,18 @@ def test_analysis_result_rejects_boolean_counts():
     for field in ("files", "source_files", "lines"):
         with pytest.raises(ValidationError):
             AnalysisResult(**base, **{field: True})
+
+
+def test_analysis_result_rejects_boolean_health_score():
+    base = dict(
+        repository="demo",
+        files=1,
+        source_files=1,
+        lines=10,
+        languages={"python": 10},
+        signals=[],
+        risks=[],
+    )
+
+    with pytest.raises(ValidationError):
+        AnalysisResult(**base, health_score=True)
