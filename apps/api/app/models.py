@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AnalyzeRequest(BaseModel):
     path: str = Field(min_length=1, description="Local repository path")
     max_files: int = Field(default=2500, ge=1, le=10000)
+
+    @field_validator("path")
+    @classmethod
+    def validate_path(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("path must not be blank")
+        return value
 
 
 class FileSignal(BaseModel):
