@@ -19,8 +19,8 @@ class AnalyzeRequest(BaseModel):
 class FileSignal(BaseModel):
     path: str = Field(min_length=1)
     kind: str = Field(min_length=1)
-    size_bytes: int = Field(ge=0)
-    lines: int = Field(ge=0)
+    size_bytes: int = Field(ge=0, strict=True)
+    lines: int = Field(ge=0, strict=True)
 
 
 class Risk(BaseModel):
@@ -32,9 +32,9 @@ class Risk(BaseModel):
 
 class AnalysisResult(BaseModel):
     repository: str = Field(min_length=1)
-    files: int = Field(ge=0)
-    source_files: int = Field(ge=0)
-    lines: int = Field(ge=0)
+    files: int = Field(ge=0, strict=True)
+    source_files: int = Field(ge=0, strict=True)
+    lines: int = Field(ge=0, strict=True)
     languages: dict[str, int]
     signals: list[FileSignal]
     risks: list[Risk]
