@@ -26,6 +26,19 @@ def test_validate_allowed_root_rejects_paths_outside_configured_root(tmp_path: P
         _validate_allowed_root(str(outside))
 
 
+def test_validate_allowed_root_rejects_symlink_escape(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = tmp_path / "workspace"
+    outside = tmp_path / "outside"
+    root.mkdir()
+    outside.mkdir()
+    escaped = root / "project"
+    escaped.symlink_to(outside, target_is_directory=True)
+    monkeypatch.setenv("PET_REPOSITORY_ROOT", str(root))
+
+    with pytest.raises(ValueError, match="within PET_REPOSITORY_ROOT"):
+        _validate_allowed_root(str(escaped))
+
+
 def test_health_prevents_caching() -> None:
     response = Response()
 
