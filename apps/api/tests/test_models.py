@@ -19,6 +19,20 @@ def test_analyze_request_rejects_boolean_max_files():
         AnalyzeRequest(path="/workspace/repo", max_files=True)
 
 
+def test_file_signal_normalizes_text_fields():
+    signal = FileSignal(path="  app.py  ", kind="  python  ", size_bytes=1, lines=1)
+    assert signal.path == "app.py"
+    assert signal.kind == "python"
+
+
+def test_file_signal_rejects_blank_text_fields():
+    with pytest.raises(ValidationError):
+        FileSignal(path="   ", kind="python", size_bytes=1, lines=1)
+
+    with pytest.raises(ValidationError):
+        FileSignal(path="app.py", kind="   ", size_bytes=1, lines=1)
+
+
 def test_file_signal_rejects_negative_metrics():
     with pytest.raises(ValidationError):
         FileSignal(path="app.py", kind="python", size_bytes=-1, lines=1)
