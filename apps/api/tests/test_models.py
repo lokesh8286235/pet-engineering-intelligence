@@ -132,6 +132,36 @@ def test_analysis_result_rejects_boolean_health_score():
         AnalysisResult(**base, health_score=True)
 
 
+def test_analysis_result_normalizes_repository():
+    result = AnalysisResult(
+        repository="  demo-repo  ",
+        files=1,
+        source_files=1,
+        lines=10,
+        languages={"python": 10},
+        signals=[],
+        risks=[],
+        health_score=100,
+    )
+
+    assert result.repository == "demo-repo"
+
+
+def test_analysis_result_rejects_blank_repository():
+    base = dict(
+        files=1,
+        source_files=1,
+        lines=10,
+        languages={"python": 10},
+        signals=[],
+        risks=[],
+        health_score=100,
+    )
+
+    with pytest.raises(ValidationError):
+        AnalysisResult(**base, repository="   ")
+
+
 def test_analysis_result_normalizes_language_names():
     result = AnalysisResult(
         repository="demo",
