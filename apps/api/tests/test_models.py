@@ -108,3 +108,39 @@ def test_analysis_result_rejects_boolean_health_score():
 
     with pytest.raises(ValidationError):
         AnalysisResult(**base, health_score=True)
+
+
+def test_analysis_result_normalizes_language_names():
+    result = AnalysisResult(
+        repository="demo",
+        files=1,
+        source_files=1,
+        lines=10,
+        languages={"  Python  ": 10},
+        signals=[],
+        risks=[],
+        health_score=100,
+    )
+
+    assert result.languages == {"Python": 10}
+
+
+def test_analysis_result_rejects_invalid_language_counts():
+    base = dict(
+        repository="demo",
+        files=1,
+        source_files=1,
+        lines=10,
+        signals=[],
+        risks=[],
+        health_score=100,
+    )
+
+    with pytest.raises(ValidationError):
+        AnalysisResult(**base, languages={"Python": -1})
+
+    with pytest.raises(ValidationError):
+        AnalysisResult(**base, languages={"Python": True})
+
+    with pytest.raises(ValidationError):
+        AnalysisResult(**base, languages={"   ": 1})
