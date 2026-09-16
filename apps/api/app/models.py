@@ -37,6 +37,22 @@ class Risk(BaseModel):
     message: str = Field(min_length=1)
     evidence: list[str] = Field(default_factory=list)
 
+    @field_validator("severity", "category", "message")
+    @classmethod
+    def validate_text_fields(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("risk text fields must not be blank")
+        return value
+
+    @field_validator("evidence")
+    @classmethod
+    def validate_evidence(cls, value: list[str]) -> list[str]:
+        normalized = [item.strip() for item in value]
+        if any(not item for item in normalized):
+            raise ValueError("risk evidence must not contain blank values")
+        return normalized
+
 
 class AnalysisResult(BaseModel):
     repository: str = Field(min_length=1)
