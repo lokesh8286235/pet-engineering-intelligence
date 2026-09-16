@@ -34,6 +34,7 @@ def test_analysis_result_enforces_health_score_bounds():
     base = dict(
         repository="demo",
         files=1,
+        source_files=1,
         lines=10,
         languages={"python": 10},
         signals=[],
