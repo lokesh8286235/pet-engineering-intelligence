@@ -27,6 +27,14 @@ def test_file_signal_rejects_negative_metrics():
         FileSignal(path="app.py", kind="python", size_bytes=1, lines=-1)
 
 
+def test_file_signal_rejects_boolean_metrics():
+    with pytest.raises(ValidationError):
+        FileSignal(path="app.py", kind="python", size_bytes=True, lines=1)
+
+    with pytest.raises(ValidationError):
+        FileSignal(path="app.py", kind="python", size_bytes=1, lines=False)
+
+
 def test_risk_requires_meaningful_text():
     with pytest.raises(ValidationError):
         Risk(severity="", category="quality", message="problem")
@@ -54,3 +62,20 @@ def test_analysis_result_enforces_health_score_bounds():
 
     result = AnalysisResult(**base, health_score=100)
     assert result.health_score == 100
+
+
+def test_analysis_result_rejects_boolean_counts():
+    base = dict(
+        repository="demo",
+        files=1,
+        source_files=1,
+        lines=10,
+        languages={"python": 10},
+        signals=[],
+        risks=[],
+        health_score=100,
+    )
+
+    for field in ("files", "source_files", "lines"):
+        with pytest.raises(ValidationError):
+            AnalysisResult(**base, **{field: True})
