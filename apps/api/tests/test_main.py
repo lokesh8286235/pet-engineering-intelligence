@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pytest
 from fastapi import Response
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.main import _cors_origins, _validate_allowed_root, health
+from app.main import _cors_origins, _validate_allowed_root, app, health
 
 
 def test_validate_allowed_root_accepts_repository_descendant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -65,3 +66,10 @@ def test_cors_origins_rejects_wildcard_with_credentials(monkeypatch: pytest.Monk
 
     with pytest.raises(ValueError, match="specific origins"):
         _cors_origins()
+
+
+def test_cors_policy_allows_only_api_methods_and_content_type() -> None:
+    middleware = next(item for item in app.user_middleware if item.cls is CORSMiddleware)
+
+    assert middleware.options["allow_methods"] == ["GET", "POST"]
+    assert middleware.options["allow_headers"] == ["Content-Type"]
