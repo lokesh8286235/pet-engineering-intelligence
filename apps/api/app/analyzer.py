@@ -94,6 +94,13 @@ def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
     return found, False
 
 
+def _kind_for_path(path: Path) -> str:
+    name = path.name.lower()
+    if name == "dockerfile" or name.startswith("dockerfile."):
+        return "Dockerfile"
+    return EXTENSIONS.get(path.suffix.lower(), "Other")
+
+
 def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     root = Path(raw_path).expanduser().resolve()
     if not root.is_dir():
@@ -113,8 +120,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     files, truncated = _files(root, max_files)
     for path, size_bytes, lines in files:
         rel = str(path.relative_to(root))
-        suffix = path.suffix.lower()
-        kind = SPECIAL_FILENAMES.get(path.name.lower(), EXTENSIONS.get(suffix, "Other"))
+        kind = _kind_for_path(path)
         languages[kind] = languages.get(kind, 0) + 1
         total_lines += lines
         if kind in SOURCE_KINDS:
