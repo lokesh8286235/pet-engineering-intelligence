@@ -37,6 +37,16 @@ Findings + source evidence
 - Provider isolation so model access does not sit on the critical deterministic analysis path.
 - Explainable engineering-health signals derived from repository artifacts rather than model-generated claims.
 
+## Supported file classification
+
+PET classifies common application, interface, query, configuration, and documentation artifacts by extension or filename. Current classifications include:
+
+- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, SQL, and GraphQL (`.graphql`, `.gql`).
+- **Documentation/configuration:** Markdown, JSON, YAML, and TOML (`.toml`).
+- **Container tooling:** `Dockerfile` is recognized by filename and remains an infrastructure signal rather than an application `source_files` count.
+
+Unknown text files remain analyzable and are reported as `Other`; binary, invalid UTF-8, oversized, sensitive, or symlinked files are excluded before classification.
+
 ## Safety boundary
 
 The analyzer enforces limits **before analysis**:
