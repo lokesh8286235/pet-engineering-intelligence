@@ -97,7 +97,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     root = Path(raw_path).expanduser().resolve()
     if not root.is_dir():
         raise ValueError("path must point to an existing directory")
-    if not 1 <= max_files <= MAX_FILES:
+    if type(max_files) is not int or not 1 <= max_files <= MAX_FILES:
         raise ValueError(f"max_files must be between 1 and {MAX_FILES}")
 
     signals: list[FileSignal] = []
