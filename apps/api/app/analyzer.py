@@ -131,7 +131,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             docs += 1
         if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
-        if kind in SOURCE_KINDS and lines == 0:
+        if kind in SOURCE_KINDS and not path.read_text(encoding="utf-8").strip():
             empty_source_files.append(rel)
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
