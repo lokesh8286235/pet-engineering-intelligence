@@ -72,9 +72,9 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
-def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
+def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int, bool]], bool]:
     """Collect only metadata needed by analysis so scans don't retain file contents."""
-    found: list[tuple[Path, int, int]] = []
+    found: list[tuple[Path, int, int, bool]] = []
     for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
         dirs[:] = sorted(
             d for d in dirs
@@ -88,7 +88,7 @@ def _files(root: Path, limit: int) -> tuple[list[tuple[Path, int, int]], bool]:
             if text is None:
                 continue
             size_bytes = len(text.encode("utf-8"))
-            found.append((path, size_bytes, len(text.splitlines())))
+            found.append((path, size_bytes, len(text.splitlines()), not text.strip()))
             if len(found) > limit:
                 return found[:limit], True
     return found, False
@@ -118,7 +118,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     empty_source_files: list[str] = []
 
     files, truncated = _files(root, max_files)
-    for path, size_bytes, lines in files:
+    for path, size_bytes, lines, is_empty in files:
         rel = str(path.relative_to(root))
         kind = _kind_for_path(path)
         languages[kind] = languages.get(kind, 0) + 1
@@ -131,7 +131,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             docs += 1
         if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
-        if kind in SOURCE_KINDS and not path.read_text(encoding="utf-8").strip():
+        if kind in SOURCE_KINDS and is_empty:
             empty_source_files.append(rel)
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
