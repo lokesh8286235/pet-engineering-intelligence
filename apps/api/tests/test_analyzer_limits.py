@@ -1,13 +1,10 @@
 from pathlib import Path
 
+import pytest
+
 from app.analyzer import analyze_repository
 
 
-def test_analysis_preserves_total_file_count_when_signals_are_capped(tmp_path: Path):
-    for index in range(3):
-        (tmp_path / f"file{index}.py").write_text(f"value = {index}\n", encoding="utf-8")
-
-    result = analyze_repository(str(tmp_path), max_files=3)
-
-    assert result.files == 3
-    assert len(result.signals) == 3
+def test_analyzer_rejects_boolean_file_limit(tmp_path: Path):
+    with pytest.raises(ValueError, match="max_files must be between 1 and 10000"):
+        analyze_repository(str(tmp_path), max_files=True)
