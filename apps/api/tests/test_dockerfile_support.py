@@ -15,3 +15,15 @@ def test_analyzer_recognizes_dockerfile(tmp_path: Path):
     assert result.source_files == 0
     assert result.languages["Dockerfile"] == 1
     assert result.signals[0].kind == "Dockerfile"
+
+
+def test_analyzer_recognizes_dockerfile_variants(tmp_path: Path):
+    for name in ("Dockerfile.prod", "dockerfile.dev"):
+        (tmp_path / name).write_text("FROM python:3.12-slim\n", encoding="utf-8")
+
+    result = analyze_repository(str(tmp_path))
+
+    assert result.files == 2
+    assert result.source_files == 0
+    assert result.languages["Dockerfile"] == 2
+    assert {signal.kind for signal in result.signals} == {"Dockerfile"}
