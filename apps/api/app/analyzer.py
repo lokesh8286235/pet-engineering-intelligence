@@ -107,6 +107,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     test_files = 0
     docs = 0
     large_files: list[str] = []
+    empty_source_files: list[str] = []
 
     files, truncated = _files(root, max_files)
     for path, size_bytes, lines in files:
@@ -123,6 +124,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             docs += 1
         if kind in SOURCE_KINDS and lines > 800:
             large_files.append(rel)
+        if kind in SOURCE_KINDS and lines == 0:
+            empty_source_files.append(rel)
         signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
     risks: list[Risk] = []
@@ -137,6 +140,8 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         risks.append(Risk(severity="medium", category="documentation", message="No Markdown documentation detected", evidence=["markdown_files=0"]))
     if large_files:
         risks.append(Risk(severity="medium", category="maintainability", message=f"{len(large_files)} large source files exceed 800 lines", evidence=large_files[:8]))
+    if empty_source_files:
+        risks.append(Risk(severity="low", category="maintainability", message=f"{len(empty_source_files)} empty source files detected", evidence=empty_source_files[:8]))
     if truncated:
         risks.append(Risk(severity="low", category="analysis", message="Analysis scan truncated at configured file limit", evidence=[f"max_files={max_files}"]))
     if file_count > MAX_SIGNALS:
@@ -152,6 +157,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     score -= 25 if test_files == 0 and file_count else 0
     score -= 10 if docs == 0 and file_count else 0
     score -= min(20, len(large_files) * 2)
+    score -= min(10, len(empty_source_files))
     score -= 10 if truncated else 0
     score = max(0, min(100, score))
 
