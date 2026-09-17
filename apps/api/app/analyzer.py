@@ -26,6 +26,7 @@ EXTENSIONS = {
     ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".sql": "SQL", ".graphql": "GraphQL", ".gql": "GraphQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML",
 }
+SPECIAL_FILENAMES = {"dockerfile": "Dockerfile"}
 SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "HTML", "CSS", "Java", "Go", "Rust", "SQL", "GraphQL"}
 
 
@@ -113,7 +114,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     for path, size_bytes, lines in files:
         rel = str(path.relative_to(root))
         suffix = path.suffix.lower()
-        kind = EXTENSIONS.get(suffix, "Other")
+        kind = SPECIAL_FILENAMES.get(path.name.lower(), EXTENSIONS.get(suffix, "Other"))
         languages[kind] = languages.get(kind, 0) + 1
         total_lines += lines
         if kind in SOURCE_KINDS:
