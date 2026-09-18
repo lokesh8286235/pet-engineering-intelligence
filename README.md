@@ -39,9 +39,9 @@ Findings + source evidence
 
 ## Supported file classification
 
-PET classifies common application, interface, query, configuration, documentation, and container artifacts by extension or filename. Current classifications include:
+PET classifies common application, interface, query, configuration, documentation, infrastructure, and container artifacts by extension or filename. Current classifications include:
 
-- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, C, C++, C#, Shell (`.sh`, `.bash`, `.zsh`, `.fish`), Kotlin (`.kt`, `.kts`), Swift, SQL, and GraphQL (`.graphql`, `.gql`).
+- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, C, C++, C#, Shell (`.sh`, `.bash`, `.zsh`, `.fish`, `.ksh`), Kotlin (`.kt`, `.kts`), Swift, SQL, GraphQL (`.graphql`, `.gql`), and Terraform (`.tf`).
 - **Documentation/configuration:** Markdown, JSON, YAML, and TOML (`.toml`).
 - **Container tooling:** `Dockerfile` and `Dockerfile.*` variants are recognized by filename and count as source artifacts for source/maintainability signals.
 
