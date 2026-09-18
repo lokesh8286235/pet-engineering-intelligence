@@ -41,7 +41,7 @@ Findings + source evidence
 
 PET classifies common application, interface, query, configuration, documentation, and container artifacts by extension or filename. Current classifications include:
 
-- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, Shell (`.sh`, `.bash`, `.zsh`, `.fish`), SQL, and GraphQL (`.graphql`, `.gql`).
+- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, C, C++, C#, Shell (`.sh`, `.bash`, `.zsh`, `.fish`), Kotlin (`.kt`, `.kts`), Swift, SQL, and GraphQL (`.graphql`, `.gql`).
 - **Documentation/configuration:** Markdown, JSON, YAML, and TOML (`.toml`).
 - **Container tooling:** `Dockerfile` and `Dockerfile.*` variants are recognized by filename and count as source artifacts for source/maintainability signals.
 
@@ -78,86 +78,3 @@ The result also caps detailed per-file `signals` at **100**. If more files were 
 | Provider isolation | Keeps the core path testable without API credentials. |
 
 ## Quick start
-
-### API
-
-```bash
-cd apps/api
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-For a deployed frontend, configure the API's allowed browser origins with `PET_CORS_ORIGINS`. Use a comma-separated list for multiple origins; if unset, the API defaults to `http://localhost:3000` for local development.
-
-```bash
-export PET_CORS_ORIGINS="https://app.example.com,https://staging.example.com"
-```
-
-### Web
-
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-### Docker
-
-```bash
-docker compose up --build
-```
-
-## API
-
-`POST /v1/analyze`
-
-```json
-{
-  "path": "/workspace/example",
-  "max_files": 2500
-}
-```
-
-`GET /health` provides a lightweight service check.
-
-## How I evaluate it
-
-PET follows:
-
-```text
-Hypothesis
-   ↓
-Implementation
-   ↓
-Adversarial / failure-mode test
-   ↓
-Evidence
-   ↓
-Iteration
-```
-
-A repository-intelligence system should fail explicitly when its inputs are unsafe or unsupported. Plausible prose is not evidence.
-
-## Roadmap
-
-- [x] Bounded repository analyzer
-- [x] Test/documentation/maintainability signals
-- [x] Sensitive-file and symlink protections
-- [x] FastAPI service and frontend foundation
-- [ ] Symbol and dependency graph extraction
-- [ ] Hybrid lexical + vector retrieval
-- [ ] Repository-aware investigation workflows
-- [ ] PR risk and change-impact analysis
-- [ ] OpenTelemetry instrumentation
-- [ ] Versioned evaluation datasets and quality gates
-- [ ] Production deployment hardening
-
-## Status
-
-**Active independent build.** Current work focuses on structural analysis, measurable evaluation, and safe repository ingestion before adding heavier agentic behavior.
-
-## License
-
-MIT
