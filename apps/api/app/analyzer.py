@@ -119,6 +119,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         raise ValueError(f"max_files must be between 1 and {MAX_FILES}")
 
     signals: list[FileSignal] = []
+    file_count = 0
     languages: dict[str, int] = {}
     total_lines = 0
     source_files = 0
@@ -131,6 +132,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
     for path, size_bytes, lines, is_empty in files:
         rel = str(path.relative_to(root))
         kind = _kind_for_path(path)
+        file_count += 1
         languages[kind] = languages.get(kind, 0) + 1
         total_lines += lines
         if kind in SOURCE_KINDS:
@@ -143,10 +145,10 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             large_files.append(rel)
         if kind in SOURCE_KINDS and is_empty:
             empty_source_files.append(rel)
-        signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
+        if len(signals) < MAX_SIGNALS:
+            signals.append(FileSignal(path=rel, kind=kind, size_bytes=size_bytes, lines=lines))
 
     risks: list[Risk] = []
-    file_count = len(signals)
     if file_count == 0:
         risks.append(Risk(severity="high", category="analysis", message="No analyzable files detected", evidence=["files=0"]))
     elif source_files == 0:
@@ -184,7 +186,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
         source_files=source_files,
         lines=total_lines,
         languages=dict(sorted(languages.items(), key=lambda item: item[1], reverse=True)),
-        signals=signals[:MAX_SIGNALS],
+        signals=signals,
         risks=risks,
         health_score=score,
     )
