@@ -39,11 +39,11 @@ Findings + source evidence
 
 ## Supported file classification
 
-PET classifies common application, interface, query, configuration, and documentation artifacts by extension or filename. Current classifications include:
+PET classifies common application, interface, query, configuration, documentation, and container artifacts by extension or filename. Current classifications include:
 
 - **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, SQL, and GraphQL (`.graphql`, `.gql`).
 - **Documentation/configuration:** Markdown, JSON, YAML, and TOML (`.toml`).
-- **Container tooling:** `Dockerfile` is recognized by filename and remains an infrastructure signal rather than an application `source_files` count.
+- **Container tooling:** `Dockerfile` and `Dockerfile.*` variants are recognized by filename and count as source artifacts for source/maintainability signals.
 
 Unknown text files remain analyzable and are reported as `Other`; binary, invalid UTF-8, oversized, sensitive, or symlinked files are excluded before classification.
 
@@ -55,7 +55,7 @@ The analyzer enforces limits **before analysis**:
 - Maximum **10,000 valid text files** per scan.
 - Invalid UTF-8, NUL-containing, binary, oversized, and symlinked files are skipped.
 - Common generated/dependency directories are excluded.
-- Credential/key artifacts and known sensitive configuration paths are excluded.
+- Credential/key artifacts and known sensitive configuration paths are excluded, including `.envrc` files.
 - When `PET_REPOSITORY_ROOT` is configured, requested paths must remain inside that operator-defined root.
 
 These are implementation constraints, not README-only promises. The analyzer keeps bounded text and metadata rather than loading entire repositories into memory.
