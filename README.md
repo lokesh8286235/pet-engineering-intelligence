@@ -41,7 +41,7 @@ Findings + source evidence
 
 PET classifies common application, interface, query, configuration, documentation, and container artifacts by extension or filename. Current classifications include:
 
-- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, SQL, and GraphQL (`.graphql`, `.gql`).
+- **Application/source:** Python, TypeScript, JavaScript, Vue, Svelte, HTML, CSS, Java, Go, Rust, Shell (`.sh`, `.bash`, `.zsh`, `.fish`), SQL, and GraphQL (`.graphql`, `.gql`).
 - **Documentation/configuration:** Markdown, JSON, YAML, and TOML (`.toml`).
 - **Container tooling:** `Dockerfile` and `Dockerfile.*` variants are recognized by filename and count as source artifacts for source/maintainability signals.
 
