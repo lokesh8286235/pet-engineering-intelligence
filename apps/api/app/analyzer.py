@@ -44,7 +44,8 @@ def _is_sensitive(path: Path) -> bool:
 def _is_test_file(path: Path) -> bool:
     """Return True for conventional test/spec files without substring false positives."""
     parts = [part.lower() for part in path.parts]
-    stem = path.stem.lower()
+    original_stem = path.stem
+    stem = original_stem.lower()
     return (
         any(part in {"test", "tests", "__tests__", "spec", "specs"} for part in parts)
         or stem in {"test", "spec"}
@@ -54,6 +55,7 @@ def _is_test_file(path: Path) -> bool:
         or stem.endswith("_spec")
         or stem.endswith(".test")
         or stem.endswith(".spec")
+        or (original_stem.startswith("Test") and len(original_stem) > 4 and original_stem[4].isupper())
     )
 
 
