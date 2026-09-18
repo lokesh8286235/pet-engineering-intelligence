@@ -38,6 +38,7 @@ def _is_sensitive(path: Path) -> bool:
         name in SENSITIVE_FILENAMES
         or any(relative_parts[-len(candidate):] == candidate for candidate in SENSITIVE_RELATIVE_PATHS)
         or name.startswith(".env.")
+        or name.startswith(".envrc.")
         or path.suffix.lower() in SENSITIVE_SUFFIXES
     )
 
