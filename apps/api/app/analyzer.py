@@ -7,7 +7,7 @@ from .models import AnalysisResult, FileSignal, Risk
 
 IGNORED = {".git", ".next", ".turbo", ".vercel", ".cache", ".parcel-cache", "node_modules", ".terraform", ".gradle", "dist", "build", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox", "coverage", "htmlcov", ".ds_store", "thumbs.db"}
 SENSITIVE_FILENAMES = {
-    ".env", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml",
+    ".env", ".envrc", ".netrc", ".npmrc", ".pypirc", ".git-credentials", "credentials.json", "credentials.yml", "credentials.yaml",
     "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa",
 }
 SENSITIVE_RELATIVE_PATHS = {
