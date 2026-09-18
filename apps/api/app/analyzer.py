@@ -53,8 +53,10 @@ def _is_test_file(path: Path) -> bool:
         or stem in {"test", "spec"}
         or stem.startswith("test_")
         or stem.endswith("_test")
+        or stem.endswith("_tests")
         or stem.startswith("spec_")
         or stem.endswith("_spec")
+        or stem.endswith("_specs")
         or stem.endswith(".test")
         or stem.endswith(".spec")
         or (original_stem.startswith("Test") and len(original_stem) > 4 and original_stem[4].isupper())
