@@ -24,11 +24,13 @@ EXTENSIONS = {
     ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
     ".vue": "Vue", ".svelte": "Svelte", ".html": "HTML", ".htm": "HTML", ".css": "CSS", ".scss": "CSS", ".sass": "CSS",
     ".java": "Java", ".go": "Go", ".rs": "Rust",
+    ".c": "C", ".h": "C", ".cc": "C++", ".cpp": "C++", ".cxx": "C++", ".hpp": "C++",
+    ".cs": "C#",
     ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".fish": "Shell",
     ".sql": "SQL", ".graphql": "GraphQL", ".gql": "GraphQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML",
 }
 SPECIAL_FILENAMES = {"dockerfile": "Dockerfile"}
-SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "HTML", "CSS", "Java", "Go", "Rust", "Shell", "SQL", "GraphQL", "Dockerfile"}
+SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "HTML", "CSS", "Java", "Go", "Rust", "C", "C++", "C#", "Shell", "SQL", "GraphQL", "Dockerfile"}
 
 
 def _is_sensitive(path: Path) -> bool:
