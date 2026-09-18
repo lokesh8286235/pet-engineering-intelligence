@@ -26,7 +26,7 @@ EXTENSIONS = {
     ".java": "Java", ".go": "Go", ".rs": "Rust",
     ".c": "C", ".h": "C", ".cc": "C++", ".cpp": "C++", ".cxx": "C++", ".hpp": "C++",
     ".cs": "C#",
-    ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".fish": "Shell",
+    ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".fish": "Shell", ".ksh": "Shell",
     ".kt": "Kotlin", ".kts": "Kotlin", ".swift": "Swift",
     ".sql": "SQL", ".graphql": "GraphQL", ".gql": "GraphQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML",
 }
