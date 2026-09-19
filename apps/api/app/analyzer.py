@@ -168,7 +168,7 @@ def analyze_repository(raw_path: str, max_files: int = 2500) -> AnalysisResult:
             severity="low",
             category="analysis",
             message="Detailed file signals truncated in the result",
-            evidence=[f"signals={file_count}", f"returned_signals={MAX_SIGNALS}"],
+            evidence=[f"files_scanned={file_count}", f"signals_retained={MAX_SIGNALS}"],
         ))
 
     score = 0 if file_count == 0 else 100
