@@ -28,11 +28,11 @@ EXTENSIONS = {
     ".cs": "C#",
     ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".fish": "Shell", ".ksh": "Shell",
     ".kt": "Kotlin", ".kts": "Kotlin", ".swift": "Swift",
-    ".sql": "SQL", ".graphql": "GraphQL", ".gql": "GraphQL", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML",
+    ".sql": "SQL", ".graphql": "GraphQL", ".gql": "GraphQL", ".proto": "Protocol Buffers", ".md": "Markdown", ".mdx": "Markdown", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".toml": "TOML",
     ".tf": "Terraform",
 }
 SPECIAL_FILENAMES = {"dockerfile": "Dockerfile"}
-SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "HTML", "CSS", "Java", "Go", "Rust", "C", "C++", "C#", "Shell", "Kotlin", "Swift", "SQL", "GraphQL", "Terraform", "Dockerfile"}
+SOURCE_KINDS = {"Python", "TypeScript", "JavaScript", "Vue", "Svelte", "HTML", "CSS", "Java", "Go", "Rust", "C", "C++", "C#", "Shell", "Kotlin", "Swift", "SQL", "GraphQL", "Protocol Buffers", "Terraform", "Dockerfile"}
 
 
 def _is_sensitive(path: Path) -> bool:
