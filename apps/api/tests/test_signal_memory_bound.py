@@ -12,4 +12,9 @@ def test_large_scan_counts_all_files_without_retaining_all_signals(tmp_path: Pat
     assert result.files == MAX_SIGNALS + 25
     assert result.source_files == MAX_SIGNALS + 25
     assert len(result.signals) == MAX_SIGNALS
-    assert any(r.message == "Detailed file signals truncated in the result" for r in result.risks)
+
+    truncation_risk = next(r for r in result.risks if r.message == "Detailed file signals truncated in the result")
+    assert truncation_risk.evidence == [
+        f"files_scanned={MAX_SIGNALS + 25}",
+        f"signals_retained={MAX_SIGNALS}",
+    ]
